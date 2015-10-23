@@ -5,6 +5,7 @@ import os
 import numpy as np
 import nibabel as nib
 import pandas as pd
+import csv
 
 
 def vox2MNI(vox,affine):
@@ -83,11 +84,19 @@ for sess in sessid:
 areaname = ['lV3','rV3','lMT','rMT']
 
 for areai in range(areanum):
-    df = pd.DataFrame({'NSPID':sessid,
-                       'volume':volume[:,areai],
-                       'psc':psc[:,areai]})
-    df.to_csv(areaname[areai]+'.csv',index=False)
+    writer = csv.writer(file(areaname[areai]+'.csv','w'))
+    writer.writerow(['NSPID','volume','psc','px','py','pz'])
+    wholedata = zip(list(sessid),list(volume[:,areai]),list(psc[:,areai]),list(peak_cor[:,areai,0]),list(peak_cor[:,areai,1]),list(peak_cor[:,areai,2]))
+    writer.writerows(wholedata)
 
+
+
+#    df = pd.DataFrame({'NSPID':sessid,
+#                      'volume':volume[:,areai],
+#                      'psc':psc[:,areai]
+#                      ''})
+#    df.to_csv(areaname[areai]+'.csv',index=False)
+    
 
 
 
