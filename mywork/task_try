@@ -36,6 +36,8 @@ sesspar = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/SSR'
 obj_file = open('/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfsf/sub/subjID','rU')
 sessid = obj_file.read().splitlines()
 obj_file.close()
+# output path
+outpath = '/nfs/j3/userhome/huangtaicheng/workingdir/try_htc/mt_analysis/'
 
 #input variable,task
 task = 'mt'
@@ -84,7 +86,7 @@ for sess in sessid:
 areaname = ['rV3','lV3','rMT','lMT']
 
 for areai in range(areanum):
-    writer = csv.writer(file(areaname[areai]+'.csv','w'))
+    writer = csv.writer(file(os.path.join(outpath,areaname[areai]+'.csv'),'wb'))
     writer.writerow(['NSPID','volume','psc','px','py','pz'])
     wholedata = zip(list(sessid),list(volume[:,areai]),list(psc[:,areai]),list(peak_cor[:,areai,0]),list(peak_cor[:,areai,1]),list(peak_cor[:,areai,2]))
     writer.writerows(wholedata)
