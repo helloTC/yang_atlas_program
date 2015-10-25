@@ -33,7 +33,7 @@ def bluring():
 # input variable,sesspar
 sesspar = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/SSR'
 # input variable,sessid
-obj_file = open('/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfsf/sub/2006subjID','rU')
+obj_file = open('/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfsf/sub/subjID','rU')
 sessid = obj_file.read().splitlines()
 obj_file.close()
 
@@ -67,7 +67,7 @@ for sess in sessid:
     for areai in range(areanum):
   
         temp = np.zeros([91,109,91]) 
-        volume[sessi,areai] = np.sum(data_mt == (areai+1))*(3*3*3)      
+        volume[sessi,areai] = np.sum(data_mt == (areai+1))*(2*2*2)      
     # psc has multiplied 100
         psc[sessi,areai] = np.mean(data_beta[data_mt == (areai+1)])/100 
     # peak coordinate,need a middle variable 'temp'        
@@ -81,7 +81,7 @@ for sess in sessid:
    
 # make file
 # Q3:how to represent peak coordinate
-areaname = ['lV3','rV3','lMT','rMT']
+areaname = ['rV3','lV3','rMT','lMT']
 
 for areai in range(areanum):
     writer = csv.writer(file(areaname[areai]+'.csv','w'))
