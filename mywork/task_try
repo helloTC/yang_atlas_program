@@ -6,7 +6,7 @@ import numpy as np
 import nibabel as nib
 import pandas as pd
 import csv
-
+import random
 
 def vox2MNI(vox,affine):
     vox_new = np.ones([4,1])
@@ -24,10 +24,15 @@ def dice(image1,image2):
     dice_num = 2*overlap.sum()/(image1.sum()+image2.sum())
     return dice_num
 
+def random_split_list(raw_list):
+    length_list = len(raw_list)
+    split_list = random.sample(raw_list,length_list)
+    pre_splitlist = split_list[0:length_list/2]
+    post_splitlist = split_list[length_list/2:]
+    return pre_splitlist,post_splitlist
+    
 def bluring():
     pass    
-
-
 
 
 # input variable,sesspar
@@ -53,6 +58,23 @@ ppsc = np.zeros([idnum,areanum])
 pzstat = np.zeros([idnum,areanum])
 peak_cor = np.zeros([idnum,areanum,3])
 sessi = 0
+
+# define pre and post index
+pre_num = idnum/2
+post_num = idnum - idnum/2
+pre_volume = np.zeros([pre_num,areanum])
+post_volume = np.zeros([post_num,areanum])
+pre_mpsc = np.zeros([pre_num,areanum])
+post_mpsc = np.zeros([post_num,areanum])
+pre_ppsc = np.zeros([pre_num,areanum])
+post_ppsc = np.zeros([post_num,areanum])
+pre_mzstat = np.zeros([pre_num,areanum])
+post_mzstat = np.zeros([post_num,areanum])
+pre_pzstat = np.zeros([pre_num,areanum])
+post_pzstat = np.zeros([post_num,areanum])
+pre_peak_cor = np.zeros([pre_num,areanum,3])
+post_peak_cor = np.zeros([post_num,areanum,3])
+
 
 for sess in sessid:
     # Q1:how to express names of mt_z5.0_ff.nii.gz
@@ -90,19 +112,99 @@ for sess in sessid:
         peak_cor[sessi,areai,:] = vox2MNI(peak_cor[sessi,areai,:],affine)
     sessi+=1
      
+# pre-data & post-data
+pre_enum,post_enum = random_split_list(range(len(list(sessid))))
+pre_sessid = np.array(sessid)[pre_enum]
+post_sessid = np.array(sessid)[post_enum]
+for areai in range(areanum):
+    pre_volume[:,areai] = volume[:,areai][pre_enum]
+    post_volume[:,areai] = volume[:,areai][post_enum]
+    pre_mpsc[:,areai] = mpsc[:,areai][pre_enum]
+    post_mpsc[:,areai] = mpsc[:,areai][post_enum]
+    pre_ppsc[:,areai] = ppsc[:,areai][pre_enum]
+    post_ppsc[:,areai] = ppsc[:,areai][post_enum]
+    pre_mzstat[:,areai] = mzstat[:,areai][pre_enum]
+    post_mzstat[:,areai] = mzstat[:,areai][post_enum]
+    pre_pzstat[:,areai] = pzstat[:,areai][pre_enum]
+    post_pzstat[:,areai] = pzstat[:,areai][post_enum] 
+    for cor in range(3):
+        pre_peak_cor[:,areai,cor] = peak_cor[:,areai,cor][pre_enum]
+        post_peak_cor[:,areai,cor] = peak_cor[:,areai,cor][post_enum]
    
 # make file
 # Q3:how to represent peak coordinate
 areaname = ['rV3','lV3','rMT','lMT']
 
 for areai in range(areanum):
-    writer = csv.writer(file(os.path.join(outpath,areaname[areai]+'.csv'),'wb'))
-    writer.writerow(['NSPID','volume','mean_psc','peak_psc','mean_zstate',
-                    'peak_zstate','px','py','pz'])
-    wholedata = zip(list(sessid),list(volume[:,areai]),list(mpsc[:,areai]),
-                list(ppsc[:,areai]),list(mzstat[:,areai]),list(pzstat[:,areai]),                list(peak_cor[:,areai,0]),list(peak_cor[:,areai,1]),
-                list(peak_cor[:,areai,2]))
-    writer.writerows(wholedata)
+    with open(os.path.join(outpath,areaname[areai]+'.csv'),'wb') as filecsv:
+        writer_total = csv.writer(filecsv)
+        writer_total.writerow(['NSPID',
+                               'volume',
+                               'mean_psc',
+                               'peak_psc',
+                               'mean_zstate',
+                               'peak_zstate',
+                               'px','py','pz'])
+        wholedata_total = zip(list(sessid),
+                          list(volume[:,areai]),
+                          list(mpsc[:,areai]),
+                          list(ppsc[:,areai]),
+                          list(mzstat[:,areai]),
+                          list(pzstat[:,areai]),
+                          list(peak_cor[:,areai,0]),
+                          list(peak_cor[:,areai,1]),
+                          list(peak_cor[:,areai,2]))
+        writer_total.writerows(wholedata_total)
+    filecsv.close()
+
+# pre_enum
+for areai in range(areanum):
+    with open(os.path.join(outpath,areaname[areai]+'_pre'+'.csv'),'wb') as filecsv:
+        writer_pre = csv.writer(filecsv)
+        writer_pre.writerow(['NSPID',
+                            'volume',
+                            'mean_psc',
+                            'peak_psc',
+                            'mean_zstate',
+                            'peak_zstate',
+                            'px','py','pz'])
+        wholedata_pre = zip(list(pre_sessid),
+                        list(pre_volume[:,areai]),
+                        list(pre_mpsc[:,areai]),
+                        list(pre_ppsc[:,areai]),
+                        list(pre_mzstat[:,areai]),
+                        list(pre_pzstat[:,areai]),
+                        list(pre_peak_cor[:,areai,0]),
+                        list(pre_peak_cor[:,areai,1]),
+                        list(pre_peak_cor[:,areai,2]))
+        writer_pre.writerows(wholedata_pre)
+    filecsv.close()
+
+# post_enum
+for areai in range(areanum):
+    with open(os.path.join(outpath,areaname[areai]+'_post'+'.csv'),'wb') as filecsv:
+        writer_post = csv.writer(filecsv)
+        writer_post.writerow(['NSPID',
+                            'volume',
+                            'mean_psc',
+                            'peak_psc',
+                            'mean_zstate',
+                            'peak_zstate',
+                            'px','py','pz'])
+        wholedata_post = zip(list(post_sessid),
+                        list(post_volume[:,areai]),
+                        list(post_mpsc[:,areai]),
+                        list(post_ppsc[:,areai]),
+                        list(post_mzstat[:,areai]),
+                        list(post_pzstat[:,areai]),
+                        list(post_peak_cor[:,areai,0]),
+                        list(post_peak_cor[:,areai,1]),
+                        list(post_peak_cor[:,areai,2]))
+        writer_post.writerows(wholedata_post)
+    filecsv.close()
+
+
+
 
 
 
