@@ -38,7 +38,7 @@ def apply_loadimg(dirs):
     return map(lambda x: nib.load(x).get_data(), dirs)
 
 
-def probatlas(sesspar,sessid,contrast,filename,lbname,lbid,outputdir):
+def probatlas(sesspar,sessid,contrast,filename,lbname,lbid,outputdir,probsplit):
     signals = [os.path.join(sesspar,sed,contrast,filename) for sed in sessid]
     ffsignals = apply_loadimg(signals)
     probdata = np.zeros([91,109,91,len(lbname)])
@@ -49,17 +49,22 @@ def probatlas(sesspar,sessid,contrast,filename,lbname,lbid,outputdir):
     probdata = probdata/len(sessid)
     for areaid in range(len(lbid)):
         img_new = nib.Nifti1Image(probdata[:,:,:,areaid],None,header)
-        nib.save(img_new,outputdir + lbname[areaid] + '.nii.gz')    
+        if probsplit == 'post':
+            nib.save(img_new,outputdir + lbname[areaid] + '_post' + '.nii.gz')  
+        elif probsplit == 'pre':
+            nib.save(img_new,outputdir + lbname[areaid] + '_pre' + '.nii.gz')
+        else:
+            nib.save(img_new,outputdir + lbname[areaid] + '.nii.gz')  
     return probdata
 
-def MPM(probdata,header,thr,outputdir):
+def MPM(probdata,header,thr,outputdir,outname):
     areasnum = probdata.shape[3]
     probdata_new = np.zeros([91,109,91,areasnum+1])
     probdata[probdata<thr] = 0 
     probdata_new[:,:,:,1:areasnum+1] = probdata
     mpmdata = probdata_new.argmax(axis=3) 
     img_new = nib.Nifti1Image(mpmdata,None,header)
-    nib.save(img_new,outputdir+'MPM_p'+str(thr)+'.nii.gz')
+    nib.save(img_new,outputdir+outname+'.nii.gz')
     return mpmdata
 
 
@@ -71,7 +76,8 @@ obj_file = open('/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/d
 sessid = obj_file.read().splitlines()
 obj_file.close()
 # output path
-outpath = '/nfs/j3/userhome/huangtaicheng/workingdir/try_htc/mt_analysis/'
+# outpath = '/nfs/j3/userhome/huangtaicheng/workingdir/try_htc/mt_analysis/'
+outpath = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/data/'
 # lbname
 areaname = ['rV3','lV3','rMT','lMT']
 # lbid
@@ -238,11 +244,27 @@ for areai in range(areanum):
     filecsv.close()
 
 # Now,work for probabilistic maps
+thr = 0.2
+# All
+# prob
 outpath_prob = os.path.join(outpath,'probabilistic/')
-probdata = probatlas(sesspar,sessid,'mt/motion','mt_z5.0_ff.nii.gz',areaname,areaid,outpath_prob)
-
+probdata = probatlas(sesspar,sessid,'mt/motion','mt_z5.0_ff.nii.gz',areaname,areaid,outpath_prob,'all')
 # MPM image
-mpmdata = MPM(probdata,header,0,outpath_prob)
+mpmdata = MPM(probdata,header,thr,outpath_prob,'MPM_p' +str(thr)+ '_all.nii.gz')
+
+# Pre
+# prob
+probdata_pre = probatlas(sesspar,list(pre_sessid),'mt/motion','mt_z5.0_ff.nii.gz',areaname,areaid,outpath_prob,'pre')
+# MPM image
+mpmdata_pre = MPM(probdata_pre,header,thr,outpath_prob,'MPM_p'+str(thr)+'_pre.nii.gz')
+
+# Post
+# prob
+probdata_post = probatlas(sesspar,list(post_sessid),'mt/motion','mt_z5.0_ff.nii.gz',areaname,areaid,outpath_prob,'post')
+# MPM image
+mpmdata_post = MPM(probdata_post,header,thr,outpath_prob,'MPM_p'+str(thr)+'_post.nii.gz')
+
+
 
 #    df = pd.DataFrame({'NSPID':sessid,
 #                      'volume':volume[:,areai],
