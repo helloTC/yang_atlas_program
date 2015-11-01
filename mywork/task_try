@@ -34,6 +34,35 @@ def random_split_list(raw_list):
 def bluring():
     pass    
 
+def apply_loadimg(dirs):
+    return map(lambda x: nib.load(x).get_data(), dirs)
+
+
+def probatlas(sesspar,sessid,contrast,filename,lbname,lbid,outputdir):
+    signals = [os.path.join(sesspar,sed,contrast,filename) for sed in sessid]
+    ffsignals = apply_loadimg(signals)
+    probdata = np.zeros([91,109,91,len(lbname)])
+    header = nib.load(signals[0]).get_header()
+    for areaid in lbid:   
+        for sigid in range(len(signals)):
+            probdata[:,:,:,areaid-1][ffsignals[sigid] == (areaid)] += 1
+    probdata = probdata/len(sessid)
+    for areaid in range(len(lbid)):
+        img_new = nib.Nifti1Image(probdata[:,:,:,areaid],None,header)
+        nib.save(img_new,outputdir + lbname[areaid] + '.nii.gz')    
+    return probdata
+
+def MPM(probdata,header,thr,outputdir):
+    areasnum = probdata.shape[3]
+    probdata_new = np.zeros([91,109,91,areasnum+1])
+    probdata[probdata<thr] = 0 
+    probdata_new[:,:,:,1:areasnum+1] = probdata
+    mpmdata = probdata_new.argmax(axis=3) 
+    img_new = nib.Nifti1Image(mpmdata,None,header)
+    nib.save(img_new,outputdir+'MPM_p'+str(thr)+'.nii.gz')
+    return mpmdata
+
+
 
 # input variable,sesspar
 sesspar = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/SSR'
@@ -43,6 +72,11 @@ sessid = obj_file.read().splitlines()
 obj_file.close()
 # output path
 outpath = '/nfs/j3/userhome/huangtaicheng/workingdir/try_htc/mt_analysis/'
+# lbname
+areaname = ['rV3','lV3','rMT','lMT']
+# lbid
+areaid = [1,2,3,4]
+
 
 #input variable,task
 task = 'mt'
@@ -90,6 +124,7 @@ for sess in sessid:
     data_beta = img_beta.get_data()    
     
     affine = img_zsta.get_affine()
+    header = img_zsta.get_header()
     
     for areai in range(areanum):
   
@@ -133,7 +168,6 @@ for areai in range(areanum):
    
 # make file
 # Q3:how to represent peak coordinate
-areaname = ['rV3','lV3','rMT','lMT']
 
 for areai in range(areanum):
     with open(os.path.join(outpath,areaname[areai]+'.csv'),'wb') as filecsv:
@@ -203,10 +237,12 @@ for areai in range(areanum):
         writer_post.writerows(wholedata_post)
     filecsv.close()
 
+# Now,work for probabilistic maps
+outpath_prob = os.path.join(outpath,'probabilistic/')
+probdata = probatlas(sesspar,sessid,'mt/motion','mt_z5.0_ff.nii.gz',areaname,areaid,outpath_prob)
 
-
-
-
+# MPM image
+mpmdata = MPM(probdata,header,0,outpath_prob)
 
 #    df = pd.DataFrame({'NSPID':sessid,
 #                      'volume':volume[:,areai],
