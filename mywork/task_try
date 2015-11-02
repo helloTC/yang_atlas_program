@@ -250,19 +250,19 @@ thr = 0.2
 outpath_prob = os.path.join(outpath,'probabilistic/')
 probdata = probatlas(sesspar,sessid,'mt/motion','mt_z5.0_ff.nii.gz',areaname,areaid,outpath_prob,'all')
 # MPM image
-mpmdata = MPM(probdata,header,thr,outpath_prob,'MPM_p' +str(thr)+ '_all.nii.gz')
+mpmdata = MPM(probdata,header,thr,outpath_prob,'MPM_p' +str(thr)+ '_all')
 
 # Pre
 # prob
 probdata_pre = probatlas(sesspar,list(pre_sessid),'mt/motion','mt_z5.0_ff.nii.gz',areaname,areaid,outpath_prob,'pre')
 # MPM image
-mpmdata_pre = MPM(probdata_pre,header,thr,outpath_prob,'MPM_p'+str(thr)+'_pre.nii.gz')
+mpmdata_pre = MPM(probdata_pre,header,thr,outpath_prob,'MPM_p'+str(thr)+'_pre')
 
 # Post
 # prob
 probdata_post = probatlas(sesspar,list(post_sessid),'mt/motion','mt_z5.0_ff.nii.gz',areaname,areaid,outpath_prob,'post')
 # MPM image
-mpmdata_post = MPM(probdata_post,header,thr,outpath_prob,'MPM_p'+str(thr)+'_post.nii.gz')
+mpmdata_post = MPM(probdata_post,header,thr,outpath_prob,'MPM_p'+str(thr)+'_post')
 
 
 
