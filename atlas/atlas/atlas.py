@@ -7,21 +7,35 @@ from pandas import DataFrame
 
 from datadeposite import DataDeposite, Struct, update
 
+# In this file,it defines lots of different class for specific operation
+# Such class mainly includes for two aspects:
+# 1) labels - label check,label define, etc. 
+# 2) rois - roi's attributes,in this file just init it
+
+# instead os.path.join into pjoin
 pjoin = os.path.join
 
-
+# Merge label data
+# What I want to mention here:
+# In this stream,different people in charge of different part of job
+# Each people need to finish roi-defined work for several areas and labels.
+# Everyone labelled several subjects but not all.
+# So it's meaningful to consider how to merge label data together
 class LabelDataMerger(object):
+
+# init attributes,variables include file path and output path
     def __init__(self, datadir, contrast, atlasname, thrstr, sep='_', imgsuf='.nii.gz', outdir='.'):
         update(self, datadir=datadir, contrast=contrast, atlasname=atlasname, 
                      thrstr=thrstr, sep=sep, middle_str=atlasname+sep+thrstr, 
                      imgsuf=imgsuf, outdir=outdir)
-        
+# Check whether label file is exist
     def check_lbintegrity(self, gflist, labelers, rsuf=''):
         for gsubjf, labeler in zip(gflist, labelers):
             for f in self._lb_filelist(gsubjf, labeler, rsuf):
                 if not os.path.exists(f):
                     print 'Not Exist:', f
-                    
+# merge labels signed by same persons together
+# if merge_group is True,merge groups together
     def mergelb(self, gflist, labelers, outpres, rsuf='', merge_group=True):
         make_dir(self.outdir)
         outs = []
@@ -46,6 +60,11 @@ class LabelDataMerger(object):
 
 
 class LabelQualityChecker(object):
+# Do quality check
+# 1) check whether anyone who labelled as referece by mistakes
+# 2) check whether anyone who labelled in wrong direction
+
+# Init class.Import data from label,labelref,labelid,etc.
     def __init__(self, label, labelref, labelids, isright_roi=None, subjsf=None, gflist=None):
         self.label = get_img_data(label) 
         self.labelref = get_img_data(labelref)
@@ -53,11 +72,13 @@ class LabelQualityChecker(object):
         self.isright_roi = self._right_lb if (isright_roi is None) else None
         self.subjs = get_subjects(subjsf) if (subjsf is not None) else None
         self.subjgrps = get_subjects_list(gflist) if (gflist is not None) else None
-
+# label checker main function.
+# Call methods of same_as_ref for wrong determined labels
+# Call method of lr_misplaced for wrong label direction
     def check_lbquality(self):
         self.same_as_ref()
         self.lr_misplaced()
-
+# Method of same_as_ref
     def same_as_ref(self):
         """
         If provide group, return the name of the subject.
@@ -76,7 +97,7 @@ class LabelQualityChecker(object):
                         nz = mask1.nonzero()
                         pos = nz[0][0], nz[1][0], nz[2][0]
                         self._sublb_err('Label Warning: same as ref', sub+1, l, pos)
-
+# Function of lr_misplaced
     def lr_misplaced(self):
         label = self.label
         median = cal_median(label.shape[0])
@@ -99,10 +120,10 @@ class LabelQualityChecker(object):
                         if x_max > median:
                             self._sublb_err('Left Right Misplace!', sub+1, l, 
                                             (nzero[0][pos],nzero[1][pos], nzero[2][pos]))
-
+# Actually,even label id means left,odd label id means right
     def _right_lb(self, lbid):
         return lbid % 2
-
+# Return error information
     def _sublb_err(self, errstr, subnum, l, ijk):
         if self.subjgrps is not None:
             try:
@@ -134,11 +155,17 @@ class LabelQualityChecker(object):
 
 
 class PairLabelSizeStats(DataDeposite):
+# this class save sizes of different labels
+# Everyone needs to label different areas twice
+# Therefor there's two label size
+# And their intersection and union
+
+# By call the class of DataDeposite,add attributes of _attrs into __dict__
     _attrs = ['first_label_sizes',
               'second_label_sizes',
               'overlap_label_sizes',
               'union_label_sizes']
-
+# Init this class,assign values to new-added attributes
     def __init__(self, fsizes, ssizes, osizes, usizes):
         super(PairLabelSizeStats, self).__init__(
                 first_label_sizes=fsizes, second_label_sizes=ssizes,
@@ -146,6 +173,8 @@ class PairLabelSizeStats(DataDeposite):
 
 
 class AtlasLabelingReliability(DataDeposite):
+# Init Label reliability
+# All of reliability includes inter- and intra- reliability
     _attrs = ['atlasname',                
               'labelnames',
               'labelids',
@@ -160,7 +189,7 @@ class AtlasLabelingReliability(DataDeposite):
               'inter_label_size_stats',
               'intra_label_size_stats'
              ]
-
+# Init attributes
     def __init__(self, atlasname, labelnames, labelids, labelers):
         super(AtlasLabelingReliability, self).__init__(
                 atlasname=atlasname, labelnames=labelnames,
@@ -172,6 +201,8 @@ class AtlasLabelingReliability(DataDeposite):
 
 
 class AtlasStat(DataDeposite):
+# This class record relationship between atlas,such as multi_roi_relations,MPM,etc.
+
     _attrs = ['name', 
               'roistatset',
               'sthr',
@@ -181,12 +212,16 @@ class AtlasStat(DataDeposite):
               'atlas'
              ]
     #_nodump_attrs = ['atlas']
+
+# Init some of attributes and values.
+# But I'm curious that why not init max_prob_map
     def __init__(self, name, roistatset, sthr, atlas):
         super(AtlasStat, self).__init__(name=name, roistatset=roistatset, sthr=sthr, atlas=atlas)
         self.multi_roi_relations = {}
 
 
 class Atlas(DataDeposite):
+# 
     _attrs = ['name',
               'labelnames',
               'labelids',

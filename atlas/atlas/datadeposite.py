@@ -1,6 +1,9 @@
 import sys
 import types
 
+# The function of this file is to initial attributes
+# In this file,it defines several classes,which will be used in other place
+
 class DataDeposite(object):
 # This class's main function is to initial variables in __dict__
 
