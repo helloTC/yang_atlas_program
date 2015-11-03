@@ -1,0 +1,96 @@
+# emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode:nil -*-
+# vi: set ft=python sts=4 ts=4 sw=4 et:
+
+import nibabel as nib
+import numpy as np
+import os
+
+pjoin = os.path.join
+
+def vox2MNI(vox,affine):
+    vox_new = np.ones([4,1])
+    vox_new[0:-1,0] = vox[:]
+    MNI = affine.dot(vox_new)
+    MNI_new = MNI[0:-1].tolist()
+    return sum(MNI_new,[])
+
+def apply_loadimg(dirs):
+    return map(lambda x: nib.load(x).get_data(),dirs)
+
+def calcorr_prob(predata,postdata,alldata,lbid):
+# Calculate correlation between pre-,post- and all- data
+    lbid_new = map(lambda id:id-1,lbid)
+    coef_prepost = np.zeros([len(lbid),1])
+    coef_preall = np.zeros([len(lbid),1])
+    coef_postall = np.zeros([len(lbid),1])
+    for id in lbid_new:
+        coef_prepost[id] = np.corrcoef(predata[id].reshape(91*109*91,),postdata[id].reshape(91*109*91,))[0][1]
+        coef_preall[id] = np.corrcoef(predata[id].reshape(91*109*91,),alldata[id].reshape(91*109*91,))[0][1]
+        coef_postall[id] = np.corrcoef(postdata[id].reshape(91*109*91,),alldata[id].reshape(91*109*91,))[0][1]
+    return coef_prepost,coef_preall,coef_postall
+
+def peakprob(predata,postdata,alldata,affine,lbid):
+# 4*4 matrix.3*4 -> peak coordinate;1*4 -> peak probability
+    lbid_new = map(lambda id:id-1,lbid)
+    peakcor = lambda data:np.unravel_index(data.argmax(),[91,109,91])
+    peakval = lambda data:np.max(data)
+    mni_all = np.zeros([4,3])
+    mni_pre = np.zeros([4,3])
+    mni_post = np.zeros([4,3])
+    vox_all = map(peakcor,alldata)
+    vox_pre = map(peakcor,predata)
+    vox_post = map(peakcor,postdata)    
+# calculate mni coordinates
+    for id in lbid_new:
+        mni_all[id,:] = vox2MNI(vox_all[id],affine) 
+        mni_pre[id,:] = vox2MNI(vox_pre[id],affine)
+        mni_post[id,:] = vox2MNI(vox_post[id],affine)
+# calculate peak values
+    peakpro_all = map(peakval,alldata)
+    peakpro_pre = map(peakval,predata)
+    peakpro_post = map(peakval,postdata)
+# combine coordinates and values 
+    prob_all = zip(mni_all,peakpro_all)
+    prob_pre = zip(mni_pre,peakpro_pre)
+    prob_post = zip(mni_post,peakpro_post)    
+    return prob_all,prob_pre,prob_post
+
+
+pathdata = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split'
+csvdata = pjoin(pathdata,'data')
+probdata = pjoin(pathdata,'data','probabilistic')
+lbid = [1,2,3,4]
+lbname = ['rV3','lV3','rMT','lMT']
+thr = 0.2
+affine = nib.load(probdata + '/' + 'lMT.nii.gz').get_affine()
+
+problist_all = [probdata + '/' + name + '.nii.gz' for name in lbname]
+problist_pre = [probdata + '/' + name + '_pre.nii.gz' for name in lbname]
+problist_post = [probdata + '/' + name + '_post.nii.gz' for name in lbname]
+
+mpmlist_all = [probdata + '/' + 'MPM_p' + str(thr) + '_all.nii.gz']
+mpmlist_pre = [probdata + '/' + 'MPM_p' + str(thr) + '_pre.nii.gz']
+mpmlist_post = [probdata + '/' + 'MPM_p' + str(thr) + '_post.nii.gz']
+
+probsignal_all = apply_loadimg(problist_all)
+probsignal_pre = apply_loadimg(problist_pre)
+probsignal_post = apply_loadimg(problist_post)
+
+mpmsignal_all = apply_loadimg(mpmlist_all)[0]
+mpmsignal_pre = apply_loadimg(mpmlist_pre)[0]
+mpmsignal_post = apply_loadimg(mpmlist_post)[0]
+
+# Calculate correlation between pre- post- and all- data in probabilistic map
+corprepost_prob, corpreall_prob, corpostall_prob = calcorr_prob(probsignal_pre,probsignal_post,probsignal_all,lbid)
+# Calculate correlation between pre- post- and all- data in MPM
+calcorr_mpm = lambda x,y:np.corrcoef(x.reshape(91*109*91,),y.reshape(91*109*91,))[0][1]
+corprepost_mpm = calcorr_mpm(mpmsignal_pre,mpmsignal_post)
+corpreall_mpm = calcorr_mpm(mpmsignal_all,mpmsignal_pre)
+corpostall_mpm = calcorr_mpm(mpmsignal_all,mpmsignal_post)
+# Now,for peak probility and coordinates
+probpeak_all,probpeak_pre,probpeak_post = peakprob(probsignal_pre,probsignal_post,probsignal_all,affine,lbid)
+
+
+
+
+
