@@ -221,7 +221,9 @@ class AtlasStat(DataDeposite):
 
 
 class Atlas(DataDeposite):
-# 
+# This class is important,it mainly inits some necessary attributes
+# Attention that roiset will be init by method init_roiset,which contains 
+# values in class ROI 
     _attrs = ['name',
               'labelnames',
               'labelids',
@@ -236,6 +238,7 @@ class Atlas(DataDeposite):
     _nodump_attrs = ['label'                # the labeled 4d image
                     ]
 
+# init attributes
     def __init__(self, label, atlasname, labelnames, labelids, img_affine, img_resolution, subjs=None, sex=None):
         self.name = atlasname
         self.label = get_img_data(label)
@@ -247,20 +250,20 @@ class Atlas(DataDeposite):
         self.subjs = subjs
         self.sex = sex
         self.init_roiset()
-
+# roiset is a list,which contains area name,label data,labels,subj,nsubjs,resolution,gender and some attributes defined by RoiStat,such as peak maps,prob maps,anatomical relations,etc.
     def init_roiset(self):
         label = self.label
         roiset = []
         for lname,lid in zip(self.labelnames, self.labelids):
             roiset.append(Roi(label==lid, lname, self.img_resolution, self.subjs, self.sex))
         self.roiset = roiset
-
+# get attributes in roiset to class of AtlasStat
     def get_basestatset(self):
         roistatset = [getattr(roi, 'basestat') for roi in self.roiset]
         return AtlasStat(name=self.name, roistatset=roistatset, sthr=None, atlas=self)
 
-
 class MultiRoiRelation(DataDeposite):
+# Defined relation matrix,relation name and size threshold
     _attrs = ['relation_matrix',        # the data matrix
               'relation_name',          # the name of the relationship
               'size_thresh'             # which size threshold this relation object is calculated based on
@@ -296,6 +299,8 @@ dfkey = Struct(idx     = 'dataidx',       # this dataframe's statistical element
 
 
 class RoiStat(DataDeposite):
+# Followed with the former class(Roi,in init_basestat method).
+# It contains several roi state attributes,such as probmaps(may call the class of RoiProbMap)
     _attrs = ['name',                     # name of this ROI
               'sthr',                     # size threshold
               'df',                       # dataframe
@@ -334,6 +339,7 @@ class RoiStat(DataDeposite):
 
 
 class Roi(DataDeposite):
+# Defined some roi attributes
     _attrs = ['name', 'label', 'subjs', 'nsubj', 'sex', 'basestat']
     
     def __init__(self, label, name, resolution, subjs=None, sex=None):
@@ -347,6 +353,7 @@ class Roi(DataDeposite):
         self.init_basestat()
 
     def init_basestat(self):
+# Basestat came from Roistat,df contains index of subjects(number),gender,volumes and sid of subjs
         size = np.sum(self.label, (0,1,2))
         df = DataFrame({dfkey.idx: np.arange(self.nsubj), 
                         dfkey.sex: self.sex, 
@@ -355,12 +362,13 @@ class Roi(DataDeposite):
         basestat = RoiStat(self.name, None, df, self)
         self.basestat = basestat
 
+# make directory
 def make_dir(path):
     if not os.path.exists(path):
         os.makedirs(path)
     elif not os.path.isdir(path):
         raise ValueError, "%s has already exists and not a directory!" % path
-
+# get subjects sid
 def get_subjects(filename):
     with open(filename, 'r') as f:
         subs = f.read().split()
@@ -368,7 +376,7 @@ def get_subjects(filename):
 
 def get_subjects_list(filenames):
     return map(get_subjects, filenames)
-
+# get img data
 def get_img_data(img):
     if isinstance(img, np.ndarray):
         return img
@@ -376,7 +384,7 @@ def get_img_data(img):
         return nib.load(img).get_data()
     else:
         raise ValueError, 'Unknown Img Type: not a string and not a array'
-
+# For judging left or right hemisphere,x < median,left hemisphere;x > median,right hemisphere
 def cal_median(len):
     if len % 2:
         return int(len)/2
