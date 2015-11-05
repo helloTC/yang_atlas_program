@@ -14,42 +14,60 @@ from datadeposite import DataDepositeTk
 pjoin = os.path.join
 
 class AtlasLabelingReliabilityTk(DataDepositeTk):
+# Toolkit to calculate label reliability
+# Include:1) inter reliablity
+#	  2) intra reliablity
+# 	  3) inter reliablity in each labeler
+#	  4) intra reliability in each labeler
     def __init__(self, atlas_reliability):
         self.depo = atlas_reliability
-    
+
     def cal_inter_label_size_stats(self, first_labels, second_labels):
+# call function of _cal_pair_label_size_stats to return first label size,
+# second label size,overlap label size and union label size into size
+# and save it
         sizes = self._cal_pair_label_size_stats(first_labels, second_labels)
         self.depo.inter_label_size_stats = PairLabelSizeStats(*sizes)
-
+    
     def cal_intra_label_size_stats(self, first_labels, second_labels):
+# Do similiar operation as above
         sizes = self._cal_pair_label_size_stats(first_labels, second_labels)
         self.depo.intra_label_size_stats = PairLabelSizeStats(*sizes)
-
+ 
     def cal_inter_reliability(self, measure_name, measure_calculator):
+# if inter_label_size_stats is not None
+# execute _cal_reliability to calculate reliablity
         if self.depo.inter_label_size_stats is None:
             raise ValueError, 'Call Atlastk.cal_inter_label_size_stats first'
         self.depo.inter_reliability_measures[measure_name] = self._cal_reliability(
             measure_name, measure_calculator, self.depo.inter_label_size_stats)
 
     def cal_intra_reliability(self, measure_name, measure_calculator):
+# Do similiar operation as above
         if self.depo.intra_label_size_stats is None:
             raise ValueError, 'Call Atlastk.cal_intra_label_size_stats first'
         self.depo.intra_reliability_measures[measure_name] = self._cal_reliability(
             measure_name, measure_calculator, self.depo.intra_label_size_stats)
     
     def cal_inter_reliability_each_labeler(self, measure_name, measure_calculator):
+# very similiar with cal_inter_reliability,I guess it's used for reliability
+# between different labeler
         if self.depo.inter_label_size_stats is None:
             raise ValueError, 'Call Atlastk.cal_inter_label_size_stats first'
         self.depo.inter_reliability_measures_each_labeler[measure_name] = self._cal_reliability_each_labeler(
             measure_name, measure_calculator, self.depo.inter_label_size_stats)
 
     def cal_intra_reliability_each_labeler(self, measure_name, measure_calculator):
+# Do similiar operation as above
         if self.depo.intra_label_size_stats is None:
             raise ValueError, 'Call Atlastk.cal_intra_label_size_stats first'
         self.depo.intra_reliability_measures_each_labeler[measure_name] = self._cal_reliability_each_labeler(
             measure_name, measure_calculator, self.depo.intra_label_size_stats)
 
     def _cal_pair_label_size_stats(self, first_labels, second_labels):
+# main function of cal_inter/intra_label_size_stats
+# call label_size_stats for calculating first label size,second label size,
+# overlap label size and union label size
         flabels = get_imgs_data(first_labels)
         slabels = get_imgs_data(second_labels)
         fsizes = DataFrame(index = ['atlas']+self.depo.labelnames,
@@ -69,6 +87,7 @@ class AtlasLabelingReliabilityTk(DataDepositeTk):
         return fsizes, ssizes, osizes, usizes    
     
     def _cal_reliability_each_labeler(self, mname, mcalculator, size_stats):
+# 
         reliability = DataFrame(index = ['atlas',]+self.depo.labelnames,
                        columns = ['all_labelers',]+self.depo.labelers)
         for lbler in range(1+len(self.depo.labelers)):

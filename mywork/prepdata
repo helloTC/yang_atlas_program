@@ -75,6 +75,9 @@ sesspar = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/SSR'
 obj_file = open('/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfsf/sub/subjID','rU')
 sessid = obj_file.read().splitlines()
 obj_file.close()
+# input gender
+pathsex = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfsf/sub/'
+gender = pd.read_csv(pathsex+'sex.csv')['gender'].tolist()
 # output path
 # outpath = '/nfs/j3/userhome/huangtaicheng/workingdir/try_htc/mt_analysis/'
 outpath = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/data/'
@@ -102,6 +105,8 @@ sessi = 0
 # define pre and post index
 pre_num = idnum/2
 post_num = idnum - idnum/2
+pre_gender = []
+post_gender = []
 pre_volume = np.zeros([pre_num,areanum])
 post_volume = np.zeros([post_num,areanum])
 pre_mpsc = np.zeros([pre_num,areanum])
@@ -171,14 +176,18 @@ for areai in range(areanum):
     for cor in range(3):
         pre_peak_cor[:,areai,cor] = peak_cor[:,areai,cor][pre_enum]
         post_peak_cor[:,areai,cor] = peak_cor[:,areai,cor][post_enum]
-   
+
+for preindex in pre_enum:
+    pre_gender.append(gender[preindex])  
+for postindex in post_enum:
+    post_gender.append(gender[postindex]) 
 # make file
-# Q3:how to represent peak coordinate
 
 for areai in range(areanum):
     with open(os.path.join(outpath,areaname[areai]+'.csv'),'wb') as filecsv:
         writer_total = csv.writer(filecsv)
         writer_total.writerow(['NSPID',
+                               'gender',
                                'volume',
                                'mean_psc',
                                'peak_psc',
@@ -186,6 +195,7 @@ for areai in range(areanum):
                                'peak_zstate',
                                'px','py','pz'])
         wholedata_total = zip(list(sessid),
+                              gender,
                           list(volume[:,areai]),
                           list(mpsc[:,areai]),
                           list(ppsc[:,areai]),
@@ -202,6 +212,7 @@ for areai in range(areanum):
     with open(os.path.join(outpath,areaname[areai]+'_pre'+'.csv'),'wb') as filecsv:
         writer_pre = csv.writer(filecsv)
         writer_pre.writerow(['NSPID',
+                            'gender',
                             'volume',
                             'mean_psc',
                             'peak_psc',
@@ -209,6 +220,7 @@ for areai in range(areanum):
                             'peak_zstate',
                             'px','py','pz'])
         wholedata_pre = zip(list(pre_sessid),
+                            pre_gender,
                         list(pre_volume[:,areai]),
                         list(pre_mpsc[:,areai]),
                         list(pre_ppsc[:,areai]),
@@ -225,6 +237,7 @@ for areai in range(areanum):
     with open(os.path.join(outpath,areaname[areai]+'_post'+'.csv'),'wb') as filecsv:
         writer_post = csv.writer(filecsv)
         writer_post.writerow(['NSPID',
+                            'gender',
                             'volume',
                             'mean_psc',
                             'peak_psc',
@@ -232,6 +245,7 @@ for areai in range(areanum):
                             'peak_zstate',
                             'px','py','pz'])
         wholedata_post = zip(list(post_sessid),
+                             post_gender,
                         list(post_volume[:,areai]),
                         list(post_mpsc[:,areai]),
                         list(post_ppsc[:,areai]),
