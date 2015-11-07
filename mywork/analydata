@@ -127,10 +127,24 @@ def plotbars(desdata_all,desdata_m,desdata_f,width,lbnames,prop,dataclass):
     ax.legend((rects1[0],rects2[0],rects3[0]),('All','Men','Women'))   
     plt.show()
 
+def savecsv(csvdel,lbname,dataclass,outpath): 
+    for i in range(len(lbname)):
+        if dataclass == 'pre':
+            csvdel[i].to_csv(outpath+lbname[i]+'_pre.csv',index = False)
+        elif dataclass == 'post':
+            csvdel[i].to_csv(outpath+lbname[i]+'_post.csv',index = False)
+        else:
+            csvdel[i].to_csv(outpath+lbname[i]+'.csv',index = False)
+
+
 
 pathdata = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split'
-csvdata = pjoin(pathdata,'data/')
+# Read data from csvdata and probdata
+csvdata = pjoin(pathdata,'data','rawcsv/')
 probdata = pjoin(pathdata,'data','probabilistic/')
+# Here we will generate data(.csv) in path of csvdata_nonan
+csvdata_nonan = pjoin(pathdata,'data','delcsv/')
+
 lbid = [1,2,3,4]
 lbname = ['rV3','lV3','rMT','lMT']
 prop = ['volume','mean_psc','peak_psc','mean_zstate','peak_zstate','px','py','pz']
@@ -177,6 +191,11 @@ miss_post = countmissdata(csv_post,lbid)
 csvdel_all = deletenas(csv_all)
 csvdel_pre = deletenas(csv_pre)
 csvdel_post = deletenas(csv_post) 
+# save csv
+savecsv(csvdel_all,lbname,'all',csvdata_nonan)
+savecsv(csvdel_pre,lbname,'pre',csvdata_nonan)
+savecsv(csvdel_post,lbname,'post',csvdata_nonan)
+
 # Describe data
 csvdes_all = descridata(csvdel_all)
 csvdes_pre = descridata(csvdel_pre)
@@ -206,4 +225,5 @@ for propname in prop:
     plotbars(csvdes_all,csvdes_m_all,csvdes_f_all,0.2,lbname,propname,'all')
     plotbars(csvdes_pre,csvdes_m_pre,csvdes_f_pre,0.2,lbname,propname,'pre')
     plotbars(csvdes_post,csvdes_m_post,csvdes_f_post,0.2,lbname,propname,'post')
+
 
