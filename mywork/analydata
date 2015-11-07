@@ -94,7 +94,38 @@ def descridata(csvdata):
         descsvdata.append(temp)
     return descsvdata
 
-
+def plotbars(desdata_all,desdata_m,desdata_f,width,lbnames,prop,dataclass):
+    N = len(lbnames)
+    allmeans = []
+    allstds = []
+    menmeans = []
+    menstds = []
+    womenmeans = []
+    womenstds = []
+    for i in range(N):
+        allmeans.append(desdata_all[i][prop]['mean'])
+        allstds.append(desdata_all[i][prop]['std'])
+        menmeans.append(desdata_m[i][prop]['mean'])
+        menstds.append(desdata_m[i][prop]['std'])
+        womenmeans.append(desdata_f[i][prop]['mean'])
+        womenstds.append(desdata_f[i][prop]['std'])
+    ind = np.arange(N)
+    fig,ax = plt.subplots()
+    rects1 = ax.bar(ind, allmeans, width, color='r', yerr=allstds)    
+    rects2 = ax.bar(ind+width, menmeans, width, color = 'y', yerr=menstds)
+    rects3 = ax.bar(ind+2*width, womenmeans, width, color = 'b', yerr=womenstds)
+# add some text for labels,title and axes ticks
+    ax.set_ylabel(prop)
+    if dataclass == 'all':
+        ax.set_title('Values by areas and gender (All)')
+    elif dataclass == 'pre':
+        ax.set_title('Values by areas and gender (Pre)')
+    else:
+        ax.set_title('Values by areas and gender (Post)')    
+    ax.set_xticks(ind + width)
+    ax.set_xticklabels(lbnames) 
+    ax.legend((rects1[0],rects2[0],rects3[0]),('All','Men','Women'))   
+    plt.show()
 
 
 pathdata = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split'
@@ -151,20 +182,28 @@ csvdes_all = descridata(csvdel_all)
 csvdes_pre = descridata(csvdel_pre)
 csvdes_post = descridata(csvdel_post)
 
-csvdes_m_all = []
-csvdes_f_all = []
-csvdes_m_pre = []
-csvdes_f_pre = []
-csvdes_m_post = []
-csvdes_f_post = []
+csvdel_m_all = []
+csvdel_f_all = []
+csvdel_m_pre = []
+csvdel_f_pre = []
+csvdel_m_post = []
+csvdel_f_post = []
 for i in range(len(csvdes_all)):
-    csvdes_m_all.append(csvdel_all[i][csvdel_all[i]['gender'] == 'm'])
-    csvdes_f_all.append(csvdel_all[i][csvdel_all[i]['gender'] == 'f'])
-    csvdes_m_pre.append(csvdel_pre[i][csvdel_pre[i]['gender'] == 'm'])
-    csvdes_f_pre.append(csvdel_pre[i][csvdel_pre[i]['gender'] == 'f'])
-    csvdes_m_post.append(csvdel_post[i][csvdel_post[i]['gender'] == 'm'])
-    csvdes_f_post.append(csvdel_post[i][csvdel_post[i]['gender'] == 'f'])
-# plot bars     
-
-
+    csvdel_m_all.append(csvdel_all[i][csvdel_all[i]['gender'] == 'm'])
+    csvdel_f_all.append(csvdel_all[i][csvdel_all[i]['gender'] == 'f'])
+    csvdel_m_pre.append(csvdel_pre[i][csvdel_pre[i]['gender'] == 'm'])
+    csvdel_f_pre.append(csvdel_pre[i][csvdel_pre[i]['gender'] == 'f'])
+    csvdel_m_post.append(csvdel_post[i][csvdel_post[i]['gender'] == 'm'])
+    csvdel_f_post.append(csvdel_post[i][csvdel_post[i]['gender'] == 'f'])
+csvdes_m_all = descridata(csvdel_m_all)
+csvdes_f_all = descridata(csvdel_f_all)
+csvdes_m_pre = descridata(csvdel_m_pre)
+csvdes_f_pre = descridata(csvdel_f_pre)
+csvdes_m_post = descridata(csvdel_m_post)
+csvdes_f_post = descridata(csvdel_f_post)
+# plot bars 
+for propname in prop:    
+    plotbars(csvdes_all,csvdes_m_all,csvdes_f_all,0.2,lbname,propname,'all')
+    plotbars(csvdes_pre,csvdes_m_pre,csvdes_f_pre,0.2,lbname,propname,'pre')
+    plotbars(csvdes_post,csvdes_m_post,csvdes_f_post,0.2,lbname,propname,'post')
 
