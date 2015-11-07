@@ -80,7 +80,7 @@ pathsex = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfsf/su
 gender = pd.read_csv(pathsex+'sex.csv')['gender'].tolist()
 # output path
 # outpath = '/nfs/j3/userhome/huangtaicheng/workingdir/try_htc/mt_analysis/'
-outpath = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/data/'
+outpath_par = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/data/'
 # lbname
 areaname = ['rV3','lV3','rMT','lMT']
 # lbid
@@ -182,7 +182,7 @@ for preindex in pre_enum:
 for postindex in post_enum:
     post_gender.append(gender[postindex]) 
 # make file
-
+outpath = os.path.join(outpath_par,'rawcsv/')
 for areai in range(areanum):
     with open(os.path.join(outpath,areaname[areai]+'.csv'),'wb') as filecsv:
         writer_total = csv.writer(filecsv)
@@ -261,7 +261,7 @@ for areai in range(areanum):
 thr = 0.2
 # All
 # prob
-outpath_prob = os.path.join(outpath,'probabilistic/')
+outpath_prob = os.path.join(outpath_par,'probabilistic/')
 probdata = probatlas(sesspar,sessid,'mt/motion','mt_z5.0_ff.nii.gz',areaname,areaid,outpath_prob,'all')
 # MPM image
 mpmdata = MPM(probdata,header,thr,outpath_prob,'MPM_p' +str(thr)+ '_all')
