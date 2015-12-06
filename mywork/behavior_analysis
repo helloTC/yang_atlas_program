@@ -1,0 +1,126 @@
+import pandas as pd
+import numpy as np
+import os
+
+def intersection(a,b):
+# output intersection between a and b
+	c = [val for val in a if val in b]
+	return c
+
+def deletenas(csvdata):
+# csvdata is a four(area numbers) index list,each index contains DataFrame of an area
+    delcsvdata = []
+    for i in range(len(csvdata)):
+        temp = csvdata[i].dropna(axis=0,how = 'any')
+        delcsvdata.append(temp)
+    return delcsvdata
+	
+def match_id(nsp,id,prop):
+	paired_prop = nsp[prop][nsp['NSPID'].isin(id)].tolist()
+	paired_prop = pd.DataFrame({prop:paired_prop})
+	return paired_prop
+	
+
+pjoin = os.path.join
+
+# import atlas_loc for nspid in study of atlas
+atlas_loc = 'D:\\BNU project\\analysis data\\data\\rawcsv'
+behavior_loc = 'D:\\BNU project\\analysis data\\BAT data'
+nsppath = 'D:\\BNU project\\analysis data'
+output_loc = 'D:\\BNU project\\analysis data\\atlas-BAT\\rawcsv'
+output_delcsv = 'D:\\BNU project\\analysis data\\atlas-BAT\\delcsv'
+
+
+
+areaname = ['rV3','lV3','rMT','lMT']
+areaid = [1,2,3,4]
+behaviorname = ['Global Form','Global Motion']
+atlasprop = ['gender','volume','mean_psc','peak_psc','mean_zstate','peak_zstate','px','py','pz']
+behaviorprop = ['NAME','ACC','RT']
+
+atlas = []
+atlas_id = []
+atgform_atlas = []
+atgform_del_atlas = []
+atgmotion_atlas = []
+atgmotion_del_atlas = []
+atgform = []
+atgform_del = []
+atgmotion = []
+atgmotion_del = []
+
+nsp = pd.read_csv(pjoin(nsppath,'NSPSUBJ.csv'))
+nsp = nsp.sort_values('NSPID')
+nspid = nsp['NSPID'].tolist()
+nspid = [val.strip() for val in nspid]
+nsprav = nsp['RAV']
+
+for i in range(len(areaname)):
+	atlas.append(pd.read_csv(pjoin(atlas_loc,areaname[i]+'.csv')))
+
+atlas_id = atlas[0]['NSPID'].tolist()
+
+gform = pd.read_csv(pjoin(behavior_loc,'Global Form.csv'))
+gform_id = gform['NSPID'].tolist()
+gform_del = pd.read_csv(pjoin(behavior_loc,'Global Form_discard.csv'))
+gform_del_id = gform_del['NSPID'].tolist()
+gmotion = pd.read_csv(pjoin(behavior_loc,'Global Motion.csv'))
+gmotion_id = gmotion['NSPID'].tolist()
+gmotion_del = pd.read_csv(pjoin(behavior_loc,'Global Motion_discard.csv'))
+gmotion_del_id = gmotion_del['NSPID'].tolist()
+
+# paired id
+atgform_id = intersection(atlas_id,gform_id)
+atgform_delid = intersection(atlas_id,gform_del_id)
+atgmotion_id = intersection(atlas_id,gmotion_id)
+atgmotion_delid = intersection(atlas_id,gmotion_del_id)
+
+# paired rav
+atgform_rav = match_id(nsp,atgform_id,'RAV')
+atgform_derav = match_id(nsp,atgform_delid,'RAV')
+atgmotion_rav = match_id(nsp,atgmotion_id,'RAV')
+atgmotion_derav = match_id(nsp,atgmotion_delid,'RAV')
+
+for i in range(len(areaname)):
+	atgform_atlas.append(atlas[i][atlas[i].NSPID.isin(atgform_id)])
+	atgform_del_atlas.append(atlas[i][atlas[i].NSPID.isin(atgform_delid)])
+	atgmotion_atlas.append(atlas[i][atlas[i].NSPID.isin(atgmotion_id)])
+	atgmotion_del_atlas.append(atlas[i][atlas[i].NSPID.isin(atgmotion_delid)])
+	
+	
+atgform_form = gform[gform.NSPID.isin(atgform_id)]
+atgform_del_form = gform_del[gform_del.NSPID.isin(atgform_delid)]
+atgmotion_motion = gmotion[gmotion.NSPID.isin(atgmotion_id)]
+atgmotion_del_motion = gmotion[gmotion.NSPID.isin(atgmotion_delid)]
+
+for i in range(len(areaname)):
+	atgform.append(atgform_atlas[i].merge(atgform_form,on='NSPID'))
+	atgform_del.append(atgform_del_atlas[i].merge(atgform_del_form,on='NSPID'))
+	atgmotion.append(atgmotion_atlas[i].merge(atgmotion_motion,on='NSPID'))
+	atgmotion_del.append(atgmotion_del_atlas[i].merge(atgmotion_del_motion,on='NSPID'))
+
+for i in range(len(areaname)):
+	atgform[i] = atgform[i].join(atgform_rav,how = 'outer')
+	atgform_del[i] = atgform_del[i].join(atgform_derav,how = 'outer')
+	atgmotion[i] = atgmotion[i].join(atgmotion_rav,how = 'outer')
+	atgmotion_del[i] = atgmotion_del[i].join(atgmotion_derav,how = 'outer')
+
+atgform_delnan = deletenas(atgform)
+atgform_del_delnan = deletenas(atgform_del)
+atgmotion_delnan = deletenas(atgmotion)
+atgmotion_del_delnan = deletenas(atgmotion_del)
+
+# save csv
+for i in range(len(areaname)):
+	atgform[i].to_csv(pjoin(output_loc,areaname[i]+'_formraw.csv'),index=False)
+	atgform_del[i].to_csv(pjoin(output_loc,areaname[i]+'_formdel.csv'),index=False)
+	atgmotion[i].to_csv(pjoin(output_loc,areaname[i]+'_motionraw.csv'),index=False)
+	atgmotion_del[i].to_csv(pjoin(output_loc,areaname[i]+'_motiondel.csv'),index=False)
+	
+
+for i in range(len(areaname)):
+	atgform_delnan[i].to_csv(pjoin(output_delcsv,areaname[i]+'_formraw.csv'),index=False)
+	atgform_del_delnan[i].to_csv(pjoin(output_delcsv,areaname[i]+'_formdel.csv'),index=False)
+	atgmotion_delnan[i].to_csv(pjoin(output_delcsv,areaname[i]+'_motionraw.csv'),index=False)
+	atgmotion_del_delnan[i].to_csv(pjoin(output_delcsv,areaname[i]+'_motiondel.csv'),index=False)
+
