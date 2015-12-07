@@ -221,9 +221,9 @@ csvdes_f_pre = descridata(csvdel_f_pre)
 csvdes_m_post = descridata(csvdel_m_post)
 csvdes_f_post = descridata(csvdel_f_post)
 # plot bars 
-for propname in prop:    
-    plotbars(csvdes_all,csvdes_m_all,csvdes_f_all,0.2,lbname,propname,'all')
-    plotbars(csvdes_pre,csvdes_m_pre,csvdes_f_pre,0.2,lbname,propname,'pre')
-    plotbars(csvdes_post,csvdes_m_post,csvdes_f_post,0.2,lbname,propname,'post')
+#for propname in prop:    
+#    plotbars(csvdes_all,csvdes_m_all,csvdes_f_all,0.2,lbname,propname,'all')
+#    plotbars(csvdes_pre,csvdes_m_pre,csvdes_f_pre,0.2,lbname,propname,'pre')
+#    plotbars(csvdes_post,csvdes_m_post,csvdes_f_post,0.2,lbname,propname,'post')
 
 
