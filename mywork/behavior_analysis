@@ -1,3 +1,6 @@
+# emacs: -*- mode: python; py-indent-offset: 4; indent-tabs-mode:nil -*-
+# vi: set ft=python sts=4 ts=4 sw=4 et:
+
 import pandas as pd
 import numpy as np
 import os
@@ -24,11 +27,12 @@ def match_id(nsp,id,prop):
 pjoin = os.path.join
 
 # import atlas_loc for nspid in study of atlas
-atlas_loc = 'D:\\BNU project\\analysis data\\data\\rawcsv'
-behavior_loc = 'D:\\BNU project\\analysis data\\BAT data'
-nsppath = 'D:\\BNU project\\analysis data'
-output_loc = 'D:\\BNU project\\analysis data\\atlas-BAT\\rawcsv'
-output_delcsv = 'D:\\BNU project\\analysis data\\atlas-BAT\\delcsv'
+# Path of NSPID-total
+nsppath = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split'
+atlas_loc = pjoin(nsppath,'data','rawcsv')
+behavior_loc = pjoin(nsppath,'BAT')
+output_loc = pjoin(nsppath,'atlas-BAT','subject_mask','rawcsv')
+output_delcsv = pjoin(nsppath,'atlas-BAT','subject_mask','delcsv')
 
 
 
@@ -50,7 +54,8 @@ atgmotion = []
 atgmotion_del = []
 
 nsp = pd.read_csv(pjoin(nsppath,'NSPSUBJ.csv'))
-nsp = nsp.sort_values('NSPID')
+#nsp = nsp.sort_values('NSPID')
+nsp = nsp.sort_index(by='NSPID')
 nspid = nsp['NSPID'].tolist()
 nspid = [val.strip() for val in nspid]
 nsprav = nsp['RAV']
