@@ -158,14 +158,59 @@ def savecsv(csvdel,lbname,dataclass,outpath):
         else:
             csvdel[i].to_csv(outpath+lbname[i]+'.csv',index = False)
 
+def intersection(a, b):
+    c = [val for val in a if val in b]
+    return c   
+
+def combinecsv(csvname, csvpath, outputdir):
+# csvname,in my programs are also areanames
+# If you want to combine lMT.csv - rMT.csv ,just input 'MT' in csvname.
+# Also it will calculate two splited data,with suffix of _pre and _post
+# If you want to combine mpmmask data , in my programs you just need to input 
+# 'MT_groupthr'+str(thr) as csvname
+
+    lcsvfile = []
+    rcsvfile = []
+    lcsvdata = []
+    rcsvdata = []
+    lcsvdata_combine = []
+    rcsvdata_combine = []
+    combined_sess = []
+    # make csv file list
+    lcsvfile.append('l'+csvname+'.csv')
+    lcsvfile.append('l'+csvname+'_pre'+'.csv')
+    lcsvfile.append('l'+csvname+'_post'+'.csv')
+    
+    rcsvfile.append('r'+csvname+'.csv')
+    rcsvfile.append('r'+csvname+'_pre'+'.csv')
+    rcsvfile.append('r'+csvname+'_post'+'.csv')    
+    # load data from this list
+    for filename in lcsvfile:
+        lcsvdata.append(pd.read_csv(pjoin(csvpath,filename)))
+    for filename in rcsvfile:
+        rcsvdata.append(pd.read_csv(pjoin(csvpath,filename))) 
+    # Combined sessid
+    for i in range(len(lcsvfile)):
+        combined_sess.append(intersection(lcsvdata[i]['NSPID'].tolist(),rcsvdata[i]['NSPID'].tolist()))
+    # Get combined data
+    for i in range(len(combined_sess)):
+        lcsvdata_combine.append(lcsvdata[i][lcsvdata[i]['NSPID'].isin(combined_sess[i])])
+        rcsvdata_combine.append(rcsvdata[i][rcsvdata[i]['NSPID'].isin(combined_sess[i])])
+    # make .csv file
+    for i in range(len(combined_sess)):
+        lcsvdata_combine[i].to_csv(pjoin(outputdir,lcsvfile[i]),index=False)
+        rcsvdata_combine[i].to_csv(pjoin(outputdir,rcsvfile[i]),index=False)
+    return lcsvdata_combine,rcsvdata_combine
+
 
 
 pathdata = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split'
 # Read data from csvdata and probdata
-csvdata = pjoin(pathdata,'data','rawcsv','combinedcsv/')
+csvdata = pjoin(pathdata,'data','rawcsv/')
 probdata = pjoin(pathdata,'data','probabilistic/')
 # Here we will generate data(.csv) in path of csvdata_nonan
 csvdata_nonan = pjoin(pathdata,'data','delcsv/')
+
 
 lbid = [1,2,3,4]
 lbname = ['rV3','lV3','rMT','lMT']
@@ -250,10 +295,18 @@ csvdes_m_pre = descridata(csvdel_m_pre)
 csvdes_f_pre = descridata(csvdel_f_pre)
 csvdes_m_post = descridata(csvdel_m_post)
 csvdes_f_post = descridata(csvdel_f_post)
+
+# Combined data together  
+combinecsv('MT',csvdata_nonan,pjoin(csvdata_nonan,'combinedcsv/'))
+combinecsv('V3',csvdata_nonan,pjoin(csvdata_nonan,'combinedcsv/'))
+
+
 # plot bars 
 for propname in prop:    
     plotbars(csvdes_all,csvdes_m_all,csvdes_f_all,0.2,lbname,propname,'all')
     plotbars(csvdes_pre,csvdes_m_pre,csvdes_f_pre,0.2,lbname,propname,'pre')
     plotbars(csvdes_post,csvdes_m_post,csvdes_f_post,0.2,lbname,propname,'post')
+
+
 
 
