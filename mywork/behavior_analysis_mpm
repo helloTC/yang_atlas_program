@@ -29,14 +29,14 @@ pjoin = os.path.join
 # import atlas_loc for nspid in study of atlas
 # Path of NSPID-total
 nsppath = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split'
-atlas_loc = pjoin(nsppath,'data','rawcsv')
+atlas_loc = pjoin(nsppath,'data','delcsv','combinedcsv')
 behavior_loc = pjoin(nsppath,'BAT')
 output_loc = pjoin(nsppath,'atlas-BAT','mpm_mask','rawcsv')
 output_delcsv = pjoin(nsppath,'atlas-BAT','mpm_mask','delcsv')
 
-thr = 0
+# thr = 0
 # thr = 0.1
-# thr = 0.2
+thr = 0.2
 # Slightly difference for combining atlas-BAT data,areaname got to add somemore info 
 areaname = ['rV3_groupthr'+str(thr),'lV3_groupthr'+str(thr),'rMT_groupthr'+str(thr),'lMT_groupthr'+str(thr)]
 areaid = [1,2,3,4]

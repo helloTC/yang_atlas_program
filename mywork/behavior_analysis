@@ -29,7 +29,7 @@ pjoin = os.path.join
 # import atlas_loc for nspid in study of atlas
 # Path of NSPID-total
 nsppath = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split'
-atlas_loc = pjoin(nsppath,'data','rawcsv','combinedcsv')
+atlas_loc = pjoin(nsppath,'data','delcsv','combinedcsv')
 behavior_loc = pjoin(nsppath,'BAT')
 output_loc = pjoin(nsppath,'atlas-BAT','subject_mask','rawcsv')
 output_delcsv = pjoin(nsppath,'atlas-BAT','subject_mask','delcsv')
