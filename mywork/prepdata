@@ -8,6 +8,8 @@ import pandas as pd
 import csv
 import random
 
+pjoin = os.path.join
+
 def vox2MNI(vox,affine):
     vox_new = np.ones([4,1])
     vox_new[0:-1,0] = vox[:]
@@ -66,6 +68,50 @@ def MPM(probdata,header,thr,outputdir,outname):
     img_new = nib.Nifti1Image(mpmdata,None,header)
     nib.save(img_new,outputdir+outname+'.nii.gz')
     return mpmdata
+
+def intersection(a,b):
+    c = [val for val in a if val in b]
+    return c
+
+def combinecsv(csvname, csvpath, outputdir):
+# csvname,in my programs are also areanames
+# If you want to combine lMT.csv - rMT.csv ,just input 'MT' in csvname.
+# Also it will calculate two splited data,with suffix of _pre and _post
+# If you want to combine mpmmask data , in my programs you just need to input 
+# 'MT_groupthr'+str(thr) as csvname
+
+    lcsvfile = []
+    rcsvfile = []
+    lcsvdata = []
+    rcsvdata = []
+    lcsvdata_combine = []
+    rcsvdata_combine = []
+    combined_sess = []
+    # make csv file list
+    lcsvfile.append('l'+csvname+'.csv')
+    lcsvfile.append('l'+csvname+'_pre'+'.csv')
+    lcsvfile.append('l'+csvname+'_post'+'.csv')
+    
+    rcsvfile.append('r'+csvname+'.csv')
+    rcsvfile.append('r'+csvname+'_pre'+'.csv')
+    rcsvfile.append('r'+csvname+'_post'+'.csv')    
+    # load data from this list
+    for filename in lcsvfile:
+        lcsvdata.append(pd.read_csv(pjoin(csvpath,filename)))
+    for filename in rcsvfile:
+        rcsvdata.append(pd.read_csv(pjoin(csvpath,filename))) 
+    # Combined sessid
+    for i in range(len(lcsvfile)):
+        combined_sess.append(intersection(lcsvdata[i]['NSPID'].tolist(),rcsvdata[i]['NSPID'].tolist()))
+    # Get combined data
+    for i in range(len(combined_sess)):
+        lcsvdata_combine.append(lcsvdata[i][lcsvdata[i]['NSPID'].isin(combined_sess[i])])
+        rcsvdata_combine.append(rcsvdata[i][rcsvdata[i]['NSPID'].isin(combined_sess[i])])
+    # make .csv file
+    for i in range(len(combined_sess)):
+        lcsvdata_combine[i].to_csv(pjoin(outputdir,lcsvfile[i]),index=False)
+        rcsvdata_combine[i].to_csv(pjoin(outputdir,rcsvfile[i]),index=False)
+    return lcsvdata_combine,rcsvdata_combine
 
 
 
@@ -414,10 +460,13 @@ for thr in thr_all:
                         list(post_peak_cor[:,areai,2]))
             writer_post.writerows(wholedata_post)
         filecsv.close()
-    
 
-
-
+# Combined data together  
+combinecsv('MT',outpath,pjoin(outpath,'combinedcsv/'))
+combinecsv('V3',outpath,pjoin(outpath,'combinedcsv/'))
+for thr in thr_all:
+    combinecsv('MT_groupthr'+str(thr),outpath,pjoin(outpath,'combinedcsv/'))
+    combinecsv('V3_groupthr'+str(thr),outpath,pjoin(outpath,'combinedcsv/'))
 
 
 
