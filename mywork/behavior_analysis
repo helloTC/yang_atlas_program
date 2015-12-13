@@ -22,7 +22,6 @@ def match_id(nsp,id,prop):
 	paired_prop = nsp[prop][nsp['NSPID'].isin(id)].tolist()
 	paired_prop = pd.DataFrame({prop:paired_prop})
 	return paired_prop
-	
 
 pjoin = os.path.join
 
@@ -52,6 +51,18 @@ atgform = []
 atgform_del = []
 atgmotion = []
 atgmotion_del = []
+atgform_id = []
+atgmotion_id = []
+atgform_delid = []
+atgmotion_delid = []
+atgform_rav = []
+atgmotion_rav = []
+atgform_derav = []
+atgmotion_derav = []
+atgform_form = []
+atgform_del_form = []
+atgmotion_motion = []
+atgmotion_del_motion =[]
 
 nsp = pd.read_csv(pjoin(nsppath,'NSPSUBJ.csv'))
 #nsp = nsp.sort_values('NSPID')
@@ -62,8 +73,8 @@ nsprav = nsp['RAV']
 
 for i in range(len(areaname)):
 	atlas.append(pd.read_csv(pjoin(atlas_loc,areaname[i]+'.csv')))
-
-atlas_id = atlas[0]['NSPID'].tolist()
+for i in range(len(areaname)):
+    atlas_id.append(atlas[i]['NSPID'].tolist())
 
 gform = pd.read_csv(pjoin(behavior_loc,'Global Form.csv'))
 gform_id = gform['NSPID'].tolist()
@@ -74,41 +85,43 @@ gmotion_id = gmotion['NSPID'].tolist()
 gmotion_del = pd.read_csv(pjoin(behavior_loc,'Global Motion_discard.csv'))
 gmotion_del_id = gmotion_del['NSPID'].tolist()
 
-# paired id
-atgform_id = intersection(atlas_id,gform_id)
-atgform_delid = intersection(atlas_id,gform_del_id)
-atgmotion_id = intersection(atlas_id,gmotion_id)
-atgmotion_delid = intersection(atlas_id,gmotion_del_id)
+for i in range(len(areaname)):
+# paired id between atlas and BAT
+    atgform_id.append(intersection(atlas_id[i],gform_id))
+    atgform_delid.append(intersection(atlas_id[i],gform_del_id))
+    atgmotion_id.append(intersection(atlas_id[i],gmotion_id))
+    atgmotion_delid.append(intersection(atlas_id[i],gmotion_del_id))
 
+for i in range(len(areaname)):
 # paired rav
-atgform_rav = match_id(nsp,atgform_id,'RAV')
-atgform_derav = match_id(nsp,atgform_delid,'RAV')
-atgmotion_rav = match_id(nsp,atgmotion_id,'RAV')
-atgmotion_derav = match_id(nsp,atgmotion_delid,'RAV')
+    atgform_rav.append(match_id(nsp,atgform_id[i],'RAV'))
+    atgform_derav.append(match_id(nsp,atgform_delid[i],'RAV'))
+    atgmotion_rav.append(match_id(nsp,atgmotion_id[i],'RAV'))
+    atgmotion_derav.append(match_id(nsp,atgmotion_delid[i],'RAV'))
 
 for i in range(len(areaname)):
-	atgform_atlas.append(atlas[i][atlas[i].NSPID.isin(atgform_id)])
-	atgform_del_atlas.append(atlas[i][atlas[i].NSPID.isin(atgform_delid)])
-	atgmotion_atlas.append(atlas[i][atlas[i].NSPID.isin(atgmotion_id)])
-	atgmotion_del_atlas.append(atlas[i][atlas[i].NSPID.isin(atgmotion_delid)])
-	
-	
-atgform_form = gform[gform.NSPID.isin(atgform_id)]
-atgform_del_form = gform_del[gform_del.NSPID.isin(atgform_delid)]
-atgmotion_motion = gmotion[gmotion.NSPID.isin(atgmotion_id)]
-atgmotion_del_motion = gmotion[gmotion.NSPID.isin(atgmotion_delid)]
+	atgform_atlas.append(atlas[i][atlas[i].NSPID.isin(atgform_id[i])])
+	atgform_del_atlas.append(atlas[i][atlas[i].NSPID.isin(atgform_delid[i])])
+	atgmotion_atlas.append(atlas[i][atlas[i].NSPID.isin(atgmotion_id[i])])
+	atgmotion_del_atlas.append(atlas[i][atlas[i].NSPID.isin(atgmotion_delid[i])])
 
 for i in range(len(areaname)):
-	atgform.append(atgform_atlas[i].merge(atgform_form,on='NSPID'))
-	atgform_del.append(atgform_del_atlas[i].merge(atgform_del_form,on='NSPID'))
-	atgmotion.append(atgmotion_atlas[i].merge(atgmotion_motion,on='NSPID'))
-	atgmotion_del.append(atgmotion_del_atlas[i].merge(atgmotion_del_motion,on='NSPID'))
+    atgform_form.append(gform[gform.NSPID.isin(atgform_id[i])])
+    atgform_del_form.append(gform_del[gform_del.NSPID.isin(atgform_delid[i])])
+    atgmotion_motion.append(gmotion[gmotion.NSPID.isin(atgmotion_id[i])])
+    atgmotion_del_motion.append(gmotion[gmotion.NSPID.isin(atgmotion_delid[i])])
 
 for i in range(len(areaname)):
-	atgform[i] = atgform[i].join(atgform_rav,how = 'outer')
-	atgform_del[i] = atgform_del[i].join(atgform_derav,how = 'outer')
-	atgmotion[i] = atgmotion[i].join(atgmotion_rav,how = 'outer')
-	atgmotion_del[i] = atgmotion_del[i].join(atgmotion_derav,how = 'outer')
+	atgform.append(atgform_atlas[i].merge(atgform_form[i],on='NSPID'))
+	atgform_del.append(atgform_del_atlas[i].merge(atgform_del_form[i],on='NSPID'))
+	atgmotion.append(atgmotion_atlas[i].merge(atgmotion_motion[i],on='NSPID'))
+	atgmotion_del.append(atgmotion_del_atlas[i].merge(atgmotion_del_motion[i],on='NSPID'))
+
+for i in range(len(areaname)):
+	atgform[i] = atgform[i].join(atgform_rav[i],how = 'outer')
+	atgform_del[i] = atgform_del[i].join(atgform_derav[i],how = 'outer')
+	atgmotion[i] = atgmotion[i].join(atgmotion_rav[i],how = 'outer')
+	atgmotion_del[i] = atgmotion_del[i].join(atgmotion_derav[i],how = 'outer')
 
 atgform_delnan = deletenas(atgform)
 atgform_del_delnan = deletenas(atgform_del)
