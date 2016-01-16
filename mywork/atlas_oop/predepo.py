@@ -45,7 +45,7 @@ class Dataset(object):
         self.mask_data = mask_data
 
 class cal_index(object):
-    def __init__(self, ds, sessid, sessn):
+    def __init__(self, ds, sessid, sessn, gender):
     # nsubj is the number of subjects
     # narea is the number of areas
         self.targ_data = ds.targ_data
@@ -54,12 +54,20 @@ class cal_index(object):
         self.affine = ds.affine
         self.sessid = sessid
         self.sessn = sessn
+        self.gender = gender
+
         self.act_volume = []
         self.mean_zstat = []
         self.peak_zstat = []
         self.mean_psc = []
         self.peak_psc = []
         self.peak_coordin = []
+        self.mean_alff = []
+        self.peak_alff = []
+        self.mean_falff = []
+        self.peak_falff = []
+        self.mean_reho = []
+        self.peak_reho = []
         
     def volume_index(self, res=[2,2,2]):
         act_volume = []
@@ -73,23 +81,37 @@ class cal_index(object):
             raise user_defined_exception('mask_data need to be 3D or 4D volume!')
         self.act_volume = act_volume
                                
-    def zstat_index(self):
-        mean_zstat = []
-        peak_zstat = []
+    def mask_index(self, index):
+# for mean and max value of z-values,falff,alff,reho,etc.
+        mean_value = []
+        peak_value = []
         if len(self.mask_data.shape) == 4:
             for i in self.sessn:
-                [mzstat,pzstat] = cal_zstat(self.targ_data[:,:,:,i], self.mask_data[:,:,:,i], self.areanum)
-                mean_zstat.append(mzstat)
-                peak_zstat.append(pzstat)
+                [mvalue,pvalue] = cal_mask(self.targ_data[:,:,:,i], self.mask_data[:,:,:,i], self.areanum)
+                mean_value.append(mvalue)
+                peak_value.append(pvalue)
         elif len(self.mask_data.shape) == 3:
             for i in self.sessn:
-                [mzstat,pzstat] = cal_zstat(self.targ_data[:,:,:,i], self.mask_data, self.areanum)
-                mean_zstat.append(mzstat)
-                peak_zstat.append(pzstat)
+                [mvalue,pvalue] = cal_mask(self.targ_data[:,:,:,i], self.mask_data, self.areanum)
+                mean_value.append(mvalue)
+                peak_value.append(pvalue)
         else:
             raise user_defined_exception('mask_data need to be 3D or 4D volume!')
-        self.mean_zstat = mean_zstat
-        self.peak_zstat = peak_zstat
+
+        if index == 'zstat':
+            self.mean_zstat = mean_value
+            self.peak_zstat = peak_value
+        elif index == 'alff':
+            self.mean_alff = mean_value
+            self_peak_alff = peak_value
+        elif index == 'falff':
+            self.mean_falff == mean_value
+            self.peak_falff == peak_value
+        elif index == 'reho':
+            self.mean_reho == mean_value
+            self.peak_reho == peak_value
+        else:
+            raise user_defined_exception("please input index as 'zstat' or 'alff' or 'falff' or 'reho'!")
         
     def psc_index(self):
         mean_psc = []
@@ -122,12 +144,14 @@ class cal_index(object):
         else:
             raise user_defined_exception('mask_data need to be 3D or 4D volume!')
         self.peak_coordin = peak_coordin
-    def alff_index():
-        pass
-    def falff_index():
-        pass
-    def reho_index():
-        pass 
+
+
+
+
+
+
+
+
 
 
 
@@ -144,7 +168,7 @@ def cal_volume(mask_data, areanum, resolu):
         volume.append(np.sum(mask_data == (areai))*listinmul(resolu))
     return volume       
 #-------------------z-value--------------------------#
-def cal_zstat(targ_data, mask_data, areanum):
+def cal_mask(targ_data, mask_data, areanum):
     mzstat = []
     pzstat = []
     for areai in areanum:
@@ -189,9 +213,7 @@ def cal_coordin(targ_data, mask_data, areanum, affine):
         else:
             co_area.append([])
     return co_area
-
-
-
+        
 
 
     

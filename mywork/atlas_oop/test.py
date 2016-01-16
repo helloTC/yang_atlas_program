@@ -27,6 +27,8 @@ sessid = open('/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfs
 pre_enum,post_enum = random_split_list(range(len(list(sessid))))
 pre_sessid = list(np.array(sessid)[pre_enum])
 post_sessid = list(np.array(sessid)[post_enum])
+pre_gender = list(np.array(gender)[pre_enum])
+post_gender = list(np.array(gender)[post_enum])
 #-----------------------------------------------------------------------------#
 # Prepare data
 sessn = range(len(sessid))
@@ -37,11 +39,11 @@ zstat_rawdata.loadfile()
 #----------------------------------------------------------------------------#
 # Try to calculate index in the first half
 
-zstat_pre = cal_index(zstat_rawdata, pre_sessid, pre_enum)
+zstat_pre = cal_index(zstat_rawdata, pre_sessid, pre_enum, pre_gender)
 # Volume in zstat
 zstat_pre.volume_index()
 # zstat in zstat
-zstat_pre.zstat_index()
+zstat_pre.mask_index('zstat')
 # zpeak coordinate in zstat
 zstat_pre.peakcoord_index()
 #-----------------------------------------------------------------------------#
@@ -49,7 +51,7 @@ zstat_pre.peakcoord_index()
 psc_rawdata = Dataset(psc_img_file, mask_img_file, areaname, areanum, gender, sessid)
 psc_rawdata.loadfile()
 
-psc_pre = cal_index(psc_rawdata, pre_sessid, pre_enum)
+psc_pre = cal_index(psc_rawdata, pre_sessid, pre_enum, pre_gender)
 # psc in cal_psc
 psc_pre.psc_index()
 # psc_peak coordinate in psc
@@ -58,19 +60,20 @@ psc_pre.peakcoord_index()
 #------------------------------------------------------------------------------#
 # Try to calculate index in the second half
 
-zstat_post = cal_index(zstat_rawdata, post_sessid, post_enum)
+zstat_post = cal_index(zstat_rawdata, post_sessid, post_enum, post_gender)
 # volume
 zstat_post.volume_index()
 # zstat values
-zstat_post.zstat_index()
+zstat_post.mask_index('zstat')
 # zstat_peak coordinate in zstat
 zstat_post.peakcoord_index()
 
-psc_post = cal_index(psc_rawdata, post_sessid, post_enum)
+psc_post = cal_index(psc_rawdata, post_sessid, post_enum, post_gender)
 # psc values
 psc_post.psc_index()
 # psc_peak coordinate in psc
 psc_post.peakcoord_index()
 
+#------------------------------------------------------------------------------#
 
 
