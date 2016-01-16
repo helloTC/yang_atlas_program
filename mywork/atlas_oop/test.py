@@ -75,5 +75,10 @@ psc_post.psc_index()
 psc_post.peakcoord_index()
 
 #------------------------------------------------------------------------------#
+#-------------Try to get probatlas and maximum probatlas-----------------------#
+getprob = make_atlas(zstat_rawdata, sessid, sessn)
+getprob.probatlas()
+getprob.MPM(0.2)
+
 
 

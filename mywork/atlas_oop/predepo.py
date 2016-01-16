@@ -145,12 +145,30 @@ class cal_index(object):
             raise user_defined_exception('mask_data need to be 3D or 4D volume!')
         self.peak_coordin = peak_coordin
 
+class make_atlas(object):
+    def __init__(self, ds, sessid, sessn):
+        self.mask_data = ds.mask_data
+        self.areaname = ds.areaname
+        self.areanum = ds.areanum
+        self.header = ds.header
+        self.sessid = sessid
+        self.sessn = sessn
+        self.probdata = []
+        self.mpmdata = []
 
-
-
-
-
-
+    def probatlas(self):
+        probdata = np.zeros([91,109,91,len(self.areanum)])
+        for arean in self.areanum:
+            for i in self.sessn:
+                probdata[:,:,:,arean-1][self.mask_data[:,:,:,i] == (arean)] += 1
+        probdata = probdata/len(self.sessid)
+        self.probdata = probdata
+    
+    def MPM(self, thr):
+        probdata_new = np.zeros([91,109,91,len(self.areanum)+1])
+        self.probdata[self.probdata<thr] = 0
+        probdata_new[:,:,:,1:len(self.areanum)+1] = self.probdata
+        self.mpmdata = probdata_new.argmax(axis = 3)
 
 
 
