@@ -13,12 +13,14 @@ class user_defined_exception(Exception):
 
 
 class Dataset(object):
-    def __init__(self, targ_img_file, mask_img_file, areaname, areanum, gender, sessid):
+    def __init__(self, targ_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast):
         self.ftarg_img = targ_img_file
         self.fmask_img = mask_img_file
         self.areaname = areaname
         self.areanum = areanum
         self.gender = gender
+        self.taskname = taskname
+        self.contrast = contrast
         self.affine = []    
         self.targ_data = []
         self.mask_data = []
@@ -103,13 +105,13 @@ class cal_index(object):
             self.peak_zstat = peak_value
         elif index == 'alff':
             self.mean_alff = mean_value
-            self_peak_alff = peak_value
+            self.peak_alff = peak_value
         elif index == 'falff':
-            self.mean_falff == mean_value
-            self.peak_falff == peak_value
+            self.mean_falff = mean_value
+            self.peak_falff = peak_value
         elif index == 'reho':
-            self.mean_reho == mean_value
-            self.peak_reho == peak_value
+            self.mean_reho = mean_value
+            self.peak_reho = peak_value
         else:
             raise user_defined_exception("please input index as 'zstat' or 'alff' or 'falff' or 'reho'!")
         
@@ -170,6 +172,9 @@ class make_atlas(object):
         probdata_new[:,:,:,1:len(self.areanum)+1] = self.probdata
         self.mpmdata = probdata_new.argmax(axis = 3)
 
+class save_data(object):
+    def __init__(self):
+        pass
 
 
 

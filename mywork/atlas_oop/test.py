@@ -14,68 +14,73 @@ def random_split_list(raw_list):
     post_splitlist = split_list[length_list/2:]
     return pre_splitlist,post_splitlist
 
-zstat_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/zstat_combined.nii.gz'
-mask_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mt_z5.0.nii.gz'
-psc_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/psc_combined.nii.gz'
+# Index files
+zstat_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mergedata/zstat_combined.nii.gz'
+mask_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mergedata/mt_z5.0.nii.gz'
+psc_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mergedata/psc_combined.nii.gz'
+alff_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mergedata/alff_combined.nii.gz'
+falff_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mergedata/falff_combined.nii.gz'
+reho_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mergedata/reho_combined.nii.gz'
+
 areaname = ['rV3','lV3','rMT','lMT']
 areanum = [1,2,3,4]
-pathsex = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfsf/sub/'
-gender = pd.read_csv(pathsex+'sex.csv')['gender'].tolist()
-sessid = open('/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfsf/sub/subjID','rU').read().splitlines()
+taskname = 'motion'
+contrast = 'motion-fix'
+
+pathsex = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfsf/modeID'
+gender = pd.read_csv(os.path.join(pathsex, 'act_sex.csv'))['gender'].tolist()
+# gender_rest = pd.read_csv(os.path.join(pathsex, 'interID', 'inter_act_restingsex.csv'))['gender'].tolist()
+sessid = open('/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfsf/modeID/actID','rU').read().splitlines()
+# sessid_rest = open('/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfsf/modeID/interID/inter_act_restingID','rU').read().splitlines()
 #-----------------------------------------------------------------------------#
 # Split sessid into two halves
-pre_enum,post_enum = random_split_list(range(len(list(sessid))))
-pre_sessid = list(np.array(sessid)[pre_enum])
-post_sessid = list(np.array(sessid)[post_enum])
-pre_gender = list(np.array(gender)[pre_enum])
-post_gender = list(np.array(gender)[post_enum])
+# pre_enum,post_enum = random_split_list(range(len(list(sessid_act))))
+# pre_sessid_act = list(np.array(sessid_act)[pre_enum])
+# post_sessid_act = list(np.array(sessid_act)[post_enum])
+# pre_gender_act = list(np.array(gender_act)[pre_enum])
+# post_gender_act = list(np.array(gender_act)[post_enum])
 #-----------------------------------------------------------------------------#
 # Prepare data
 sessn = range(len(sessid))
-zstat_rawdata = Dataset(zstat_img_file, mask_img_file, areaname, areanum, gender, sessid)
+# sessn_rest = range(len(sessid_rest))
+# zstat
+zstat_rawdata = Dataset(zstat_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
 zstat_rawdata.loadfile()
-
-#----------------------------------------------------------------------------#
-#----------------------------------------------------------------------------#
-# Try to calculate index in the first half
-
-zstat_pre = cal_index(zstat_rawdata, pre_sessid, pre_enum, pre_gender)
-# Volume in zstat
-zstat_pre.volume_index()
-# zstat in zstat
-zstat_pre.mask_index('zstat')
-# zpeak coordinate in zstat
-zstat_pre.peakcoord_index()
-#-----------------------------------------------------------------------------#
-# Calculate psc_value
-psc_rawdata = Dataset(psc_img_file, mask_img_file, areaname, areanum, gender, sessid)
+# psc
+psc_rawdata = Dataset(psc_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
 psc_rawdata.loadfile()
+# alff
+alff_rawdata = Dataset(alff_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
+alff_rawdata.loadfile()
+# falff
+falff_rawdata = Dataset(falff_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
+falff_rawdata.loadfile()
+# reho
+reho_rawdata = Dataset(reho_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
+reho_rawdata.loadfile()
 
-psc_pre = cal_index(psc_rawdata, pre_sessid, pre_enum, pre_gender)
-# psc in cal_psc
-psc_pre.psc_index()
-# psc_peak coordinate in psc
-psc_pre.peakcoord_index()
-#------------------------------------------------------------------------------#
-#------------------------------------------------------------------------------#
-# Try to calculate index in the second half
+#---------------------------calculate index for whole data---------------------#
+zstat_index = cal_index(zstat_rawdata, sessid, sessn, gender)
+zstat_index.volume_index()
+zstat_index.mask_index('zstat')
+zstat_index.peakcoord_index()
 
-zstat_post = cal_index(zstat_rawdata, post_sessid, post_enum, post_gender)
-# volume
-zstat_post.volume_index()
-# zstat values
-zstat_post.mask_index('zstat')
-# zstat_peak coordinate in zstat
-zstat_post.peakcoord_index()
+psc_index = cal_index(psc_rawdata, sessid, sessn, gender)
+psc_index.psc_index()
+psc_index.peakcoord_index()
 
-psc_post = cal_index(psc_rawdata, post_sessid, post_enum, post_gender)
-# psc values
-psc_post.psc_index()
-# psc_peak coordinate in psc
-psc_post.peakcoord_index()
+alff_index = cal_index(alff_rawdata, sessid, sessn, gender)
+alff_index.mask_index('alff')
+alff_index.peakcoord_index()
 
-#------------------------------------------------------------------------------#
-#-------------Try to get probatlas and maximum probatlas-----------------------#
+falff_index = cal_index(falff_rawdata, sessid, sessn, gender)
+falff_index.mask_index('falff')
+falff_index.peakcoord_index()
+
+reho_index = cal_index(reho_rawdata, sessid, sessn, gender)
+reho_index.mask_index('reho')
+reho_index.peakcoord_index()
+#---------------------------calculate PM and MPM------------------------------#
 getprob = make_atlas(zstat_rawdata, sessid, sessn)
 getprob.probatlas()
 getprob.MPM(0.2)
