@@ -4,6 +4,7 @@
 import os
 import numpy as np
 import nibabel as nib
+import copy
 
 class user_defined_exception(Exception):
     def __init__(self, str):
@@ -61,15 +62,20 @@ class cal_index(object):
         self.act_volume = []
         self.mean_zstat = []
         self.peak_zstat = []
+        self.std_zstat = []
         self.mean_psc = []
         self.peak_psc = []
+        self.std_psc = []
         self.peak_coordin = []
         self.mean_alff = []
         self.peak_alff = []
+        self.std_alff = []
         self.mean_falff = []
         self.peak_falff = []
+        self.std_falff = []
         self.mean_reho = []
         self.peak_reho = []
+        self.std_reho = []
         
     def volume_index(self, res=[2,2,2]):
         act_volume = []
@@ -87,51 +93,62 @@ class cal_index(object):
 # for mean and max value of z-values,falff,alff,reho,etc.
         mean_value = []
         peak_value = []
+        std_value = []
         if len(self.mask_data.shape) == 4:
             for i in self.sessn:
-                [mvalue,pvalue] = cal_mask(self.targ_data[:,:,:,i], self.mask_data[:,:,:,i], self.areanum)
+                [mvalue,pvalue,stdvalue] = cal_mask(self.targ_data[:,:,:,i], self.mask_data[:,:,:,i], self.areanum)
                 mean_value.append(mvalue)
                 peak_value.append(pvalue)
+                std_value.append(stdvalue)
         elif len(self.mask_data.shape) == 3:
             for i in self.sessn:
-                [mvalue,pvalue] = cal_mask(self.targ_data[:,:,:,i], self.mask_data, self.areanum)
+                [mvalue,pvalue,stdvalue] = cal_mask(self.targ_data[:,:,:,i], self.mask_data, self.areanum)
                 mean_value.append(mvalue)
                 peak_value.append(pvalue)
+                std_value.append(stdvalue)
         else:
             raise user_defined_exception('mask_data need to be 3D or 4D volume!')
 
         if index == 'zstat':
             self.mean_zstat = mean_value
             self.peak_zstat = peak_value
+            self.std_zstat = std_value
         elif index == 'alff':
             self.mean_alff = mean_value
             self.peak_alff = peak_value
+            self.std_alff = std_value
         elif index == 'falff':
             self.mean_falff = mean_value
             self.peak_falff = peak_value
+            self.std_falff = std_value
         elif index == 'reho':
             self.mean_reho = mean_value
             self.peak_reho = peak_value
+            self.std_reho = std_value
         else:
             raise user_defined_exception("please input index as 'zstat' or 'alff' or 'falff' or 'reho'!")
         
     def psc_index(self):
         mean_psc = []
         peak_psc = []
+        std_psc = []
         if len(self.mask_data.shape) == 4:
             for i in self.sessn:
-                [mpsc,ppsc] = cal_psc(self.targ_data[:,:,:,i], self.mask_data[:,:,:,i], self.areanum)
+                [mpsc,ppsc,stdpsc] = cal_psc(self.targ_data[:,:,:,i], self.mask_data[:,:,:,i], self.areanum)
                 mean_psc.append(mpsc)
                 peak_psc.append(ppsc)
+                std_psc.append(stdpsc)
         elif len(self.mask_data.shape) == 3:
             for i in self.sessn:
-                [mpsc,ppsc] = cal_psc(self.targ_data[:,:,:,i], self.mask_data, self.areanum)
+                [mpsc,ppsc,stdpsc] = cal_psc(self.targ_data[:,:,:,i], self.mask_data, self.areanum)
                 mean_psc.append(mpsc)
                 peak_psc.append(ppsc)
+                std_psc.append(stdpsc)
         else:
             raise user_defined_exception('mask_data need to be 3D or 4D volume!')
         self.mean_psc = mean_psc
         self.peak_psc = peak_psc
+        self.std_psc = std_psc
 
     def peakcoord_index(self):
         peak_coordin = []
@@ -172,11 +189,40 @@ class make_atlas(object):
         probdata_new[:,:,:,1:len(self.areanum)+1] = self.probdata
         self.mpmdata = probdata_new.argmax(axis = 3)
 
+class reliability(object):
+    def __init__(self, areanum):
+        self.maska = []
+        self.maskb = []
+        self.areanum = areanum
+        self.dice = []
+    
+    def loadfile(self, maska_imag, maskb_imag):
+        maska = nib.load(maska_imag).get_data()
+        maskb = nib.load(maskb_imag).get_data()
+        self.maska = maska
+        self.maskb = maskb
+
+    def cal_dice(self):
+    # dice value output like [[brain areas],[],...]
+        dice = []
+        sessnum = self.maska.shape[3]
+        for sessi in range(sessnum):
+            temp = []
+            for areai in self.areanum:
+                dice_value = do_dice(self.maska[:,:,:,sessi], self.maskb[:,:,:,sessi], areai)
+                temp.append(dice_value)
+            dice.append(temp)
+        self.dice = dice
+         
+
+
+
+
+
+
 class save_data(object):
     def __init__(self):
         pass
-
-
 
 
 #-------------------functions-----------------------#
@@ -194,26 +240,32 @@ def cal_volume(mask_data, areanum, resolu):
 def cal_mask(targ_data, mask_data, areanum):
     mzstat = []
     pzstat = []
+    stdzstat = []
     for areai in areanum:
         if len(targ_data[mask_data == areai])!=0:
             mzstat.append(np.nanmean(targ_data[mask_data == areai]))
             pzstat.append(np.nanmax(targ_data[mask_data == areai]))
+            stdzstat.append(np.std(targ_data[mask_data == areai]))
         else: 
             mzstat.append(0)
             pzstat.append(0)
-    return mzstat,pzstat
+            stdzstat.append(0)
+    return mzstat,pzstat,stdzstat
 #-------------------psc-value-------------------------#
 def cal_psc(targ_data, mask_data, areanum):
     mpsc = []
     ppsc = []
+    stdpsc = []
     for areai in areanum:
         if len(targ_data[mask_data == areai])!=0:
             mpsc.append(np.nanmean(targ_data[mask_data == areai])/100)
             ppsc.append(np.nanmax(targ_data[mask_data == areai])/100)
+            stdpsc.append(np.std(targ_data[mask_data == areai])/100)
         else:
             mpsc.append(0)
             ppsc.append(0)
-    return mpsc,ppsc
+            stdpsc.append(0)
+    return mpsc,ppsc,stdpsc
 #--------------------MNI coordinate------------------#
 def vox2MNI(vox, affine):
     vox_new = np.ones([4,1])
@@ -229,16 +281,22 @@ def cal_coordin(targ_data, mask_data, areanum, affine):
         if len(targ_data[mask_data == areai])!=0:
             temp = np.zeros([91,109,91])
             temp[mask_data == areai] = targ_data[mask_data == areai]
-            peakcor_vox = np.unravel_index(temp.argmax(), temp.shape)        
+            peakcor_vox = np.unravel_index(temp.argmax(), temp.shape)
+            peakv = temp.argmax()        
             peakcor_mni = list(vox2MNI(peakcor_vox ,affine))
             co_area.append(peakcor_mni)
             peakcor_mni = []
         else:
             co_area.append([])
     return co_area
-        
-
-
-    
-     
-
+       
+def do_dice(maska, maskb, value):
+# value here is aim to filter areas so that we can get dice in every brain areas
+    maska_bin = copy.deepcopy(maska)
+    maskb_bin = copy.deepcopy(maskb)
+    maska_bin[maska_bin!=value] = 0
+    maskb_bin[maskb_bin!=value] = 0
+    maska_bin[maska_bin==value] = 1
+    maskb_bin[maskb_bin==value] = 1
+    dice_value = 2*((maska_bin*maskb_bin).sum()/(maska_bin.sum()+maskb_bin.sum()))
+    return dice_value 

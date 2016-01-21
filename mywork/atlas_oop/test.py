@@ -22,6 +22,12 @@ alff_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/r
 falff_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mergedata/falff_combined.nii.gz'
 reho_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mergedata/reho_combined.nii.gz'
 
+# roi files
+zgf_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mergedata/zgf_z5.0.nii.gz'
+lzg_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mergedata/lzg_z5.0.nii.gz'
+htc_img_file = '/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/BAA/results/yang_test/sub/sub_split/mergedata/htc_z5.0.nii.gz'
+
+
 areaname = ['rV3','lV3','rMT','lMT']
 areanum = [1,2,3,4]
 taskname = 'motion'
@@ -41,49 +47,58 @@ sessid = open('/nfs/j3/userhome/huangtaicheng/workingdir/parcellation_MT/doc/dfs
 # post_gender_act = list(np.array(gender_act)[post_enum])
 #-----------------------------------------------------------------------------#
 # Prepare data
-sessn = range(len(sessid))
+# sessn = range(len(sessid))
 # sessn_rest = range(len(sessid_rest))
 # zstat
-zstat_rawdata = Dataset(zstat_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
-zstat_rawdata.loadfile()
+# zstat_rawdata = Dataset(zstat_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
+# zstat_rawdata.loadfile()
 # psc
-psc_rawdata = Dataset(psc_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
-psc_rawdata.loadfile()
+# psc_rawdata = Dataset(psc_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
+# psc_rawdata.loadfile()
 # alff
-alff_rawdata = Dataset(alff_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
-alff_rawdata.loadfile()
+# alff_rawdata = Dataset(alff_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
+# alff_rawdata.loadfile()
 # falff
-falff_rawdata = Dataset(falff_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
-falff_rawdata.loadfile()
+# falff_rawdata = Dataset(falff_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
+# falff_rawdata.loadfile()
 # reho
-reho_rawdata = Dataset(reho_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
-reho_rawdata.loadfile()
+# reho_rawdata = Dataset(reho_img_file, mask_img_file, areaname, areanum, gender, sessid, taskname, contrast)
+# reho_rawdata.loadfile()
 
 #---------------------------calculate index for whole data---------------------#
-zstat_index = cal_index(zstat_rawdata, sessid, sessn, gender)
-zstat_index.volume_index()
-zstat_index.mask_index('zstat')
-zstat_index.peakcoord_index()
+# zstat_index = cal_index(zstat_rawdata, sessid, sessn, gender)
+# zstat_index.volume_index()
+# zstat_index.mask_index('zstat')
+# zstat_index.peakcoord_index()
 
-psc_index = cal_index(psc_rawdata, sessid, sessn, gender)
-psc_index.psc_index()
-psc_index.peakcoord_index()
+# psc_index = cal_index(psc_rawdata, sessid, sessn, gender)
+# psc_index.psc_index()
+# psc_index.peakcoord_index()
 
-alff_index = cal_index(alff_rawdata, sessid, sessn, gender)
-alff_index.mask_index('alff')
-alff_index.peakcoord_index()
+# alff_index = cal_index(alff_rawdata, sessid, sessn, gender)
+# alff_index.mask_index('alff')
+# alff_index.peakcoord_index()
 
-falff_index = cal_index(falff_rawdata, sessid, sessn, gender)
-falff_index.mask_index('falff')
-falff_index.peakcoord_index()
+# falff_index = cal_index(falff_rawdata, sessid, sessn, gender)
+# falff_index.mask_index('falff')
+# falff_index.peakcoord_index()
 
-reho_index = cal_index(reho_rawdata, sessid, sessn, gender)
-reho_index.mask_index('reho')
-reho_index.peakcoord_index()
+# reho_index = cal_index(reho_rawdata, sessid, sessn, gender)
+# reho_index.mask_index('reho')
+# reho_index.peakcoord_index()
 #---------------------------calculate PM and MPM------------------------------#
-getprob = make_atlas(zstat_rawdata, sessid, sessn)
-getprob.probatlas()
-getprob.MPM(0.2)
-
+# getprob = make_atlas(zstat_rawdata, sessid, sessn)
+# getprob.probatlas()
+# getprob.MPM(0.2)
+# --------------------------calculate reliability-----------------------------#
+reliab_hz = reliability(areanum)
+reliab_hz.loadfile(htc_img_file, zgf_img_file)
+reliab_hz.cal_dice()
+reliab_hl = reliability(areanum)
+reliab_hl.loadfile(htc_img_file, lzg_img_file)
+reliab_hl.cal_dice()
+reliab_zl = reliability(areanum)
+reliab_zl.loadfile(zgf_img_file, lzg_img_file)
+reliab_zl.cal_dice()
 
 
