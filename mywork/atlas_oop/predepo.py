@@ -214,18 +214,24 @@ class reliability(object):
             dice.append(temp)
         self.dice = dice
          
-
-
-
-
-
-
 class save_data(object):
-    def __init__(self):
+    def __init__(self): 
         pass
+    
+    def combinattr(self, instan, attri, new_attri):
+    # combined attributes from other instances into the instance of 'save_data'
+        if hasattr(instan, attri): 
+            if len(get_attrvalue(instan, attri))!=0:
+                setattr(self, new_attri, get_attrvalue(instan, attri))
+            else:
+                print '%s is empty!' % attri 
 
+
+    
 
 #-------------------functions-----------------------#
+
+#--------------functions for index------------------#
 #-------------------volume--------------------------#
 def listinmul(mul_list):
     outnum = reduce(lambda x,y:x*y,mul_list)
@@ -299,4 +305,15 @@ def do_dice(maska, maskb, value):
     maska_bin[maska_bin==value] = 1
     maskb_bin[maskb_bin==value] = 1
     dice_value = 2*((maska_bin*maskb_bin).sum()/(maska_bin.sum()+maskb_bin.sum()))
-    return dice_value 
+    return dice_value
+
+
+#----------------functions for others-----------------------------------------#
+def get_attrname(instan):
+# Get all attribute name of an instance
+    return instan.__dict__.keys()
+
+def get_attrvalue(instan, attrname):
+# Get value of attrname in an instance
+    return instan.__getattribute__(attrname)
+
