@@ -141,9 +141,9 @@ def plotbars(desdata_all,desdata_m,desdata_f,width,lbnames,prop,dataclass):
     if dataclass == 'all':
         ax.set_title('Values by areas and gender (All)')
     elif dataclass == 'pre':
-        ax.set_title('Values by areas and gender (Pre)')
+        ax.set_title('Values by areas and gender (1)')
     else:
-        ax.set_title('Values by areas and gender (Post)')    
+        ax.set_title('Values by areas and gender (2)')    
     ax.set_xticks(ind + width)
     ax.set_xticklabels(lbnames) 
     ax.legend((rects1[0],rects2[0],rects3[0]),('All','Men','Women'))   
